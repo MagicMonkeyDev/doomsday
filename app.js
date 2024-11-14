@@ -17,7 +17,7 @@ class PopulationCounter {
             const response = await fetch('https://world-population.p.rapidapi.com/worldpopulation', {
                 method: 'GET',
                 headers: {
-                    'X-RapidAPI-Key': 'YOUR_RAPID_API_KEY', // You'll need to get an API key
+                    'X-RapidAPI-Key': 'a62ab08f3fmsh3906e1ba491fca0p1eb8c5jsn6664b6f554f2', // You'll need to get an API key
                     'X-RapidAPI-Host': 'world-population.p.rapidapi.com'
                 }
             });
