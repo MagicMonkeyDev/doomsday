@@ -103,19 +103,14 @@ class LogManager {
     }
 
     async initialize() {
-        // Show loading state
         this.logsContainer.innerHTML = '<div class="loading">INITIALIZING LOGS...</div>';
-        
-        // Get initial logs
         await this.fetchLogs();
-        
-        // Check for new logs every 5 minutes
         setInterval(() => this.checkForNewLogs(), 5 * 60 * 1000);
     }
 
     async fetchLogs() {
         try {
-            const response = await fetch('http://localhost:3000/api/logs');
+            const response = await fetch('/api/logs');
             const logs = await response.json();
             this.displayLogs(logs);
         } catch (error) {
@@ -126,9 +121,8 @@ class LogManager {
 
     async checkForNewLogs() {
         try {
-            const response = await fetch('http://localhost:3000/api/logs/latest');
+            const response = await fetch('/api/logs?latest=true');
             const latestLog = await response.json();
-            
             if (latestLog) {
                 this.addNewLog(latestLog);
             }
