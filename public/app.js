@@ -240,30 +240,57 @@ class LogManager {
                     <h2 class="log-title">${log.title}</h2>
                 </div>
                 
-                <div class="log-section">
-                    <h3>SCENARIO</h3>
+                <div class="log-section scenario">
+                    <h3>SCENARIO OVERVIEW</h3>
                     <p>${log.content}</p>
                 </div>
 
-                <div class="log-section">
-                    <h3>TIMELINE</h3>
-                    <ul>
+                <div class="log-section probability">
+                    <div class="probability-meter">
+                        <div class="probability-label">PROBABILITY RATING:</div>
+                        <div class="probability-value">${log.technicalData.probabilityRating}</div>
+                        <div class="time-to-impact">Time to Impact: ${log.technicalData.timeToImpact}</div>
+                    </div>
+                </div>
+
+                <div class="log-section timeline">
+                    <h3>EVENT TIMELINE</h3>
+                    <ul class="cyber-list">
                         ${log.timeline.map(event => `<li>${event}</li>`).join('')}
                     </ul>
                 </div>
 
-                <div class="log-section">
-                    <h3>OBSERVATIONS</h3>
-                    <ul>
+                <div class="log-section technical">
+                    <h3>TECHNICAL DATA</h3>
+                    <div class="tech-grid">
+                        ${Object.entries(log.technicalData).map(([key, value]) => `
+                            <div class="tech-item">
+                                <span class="tech-label">${key.replace(/([A-Z])/g, ' $1').toUpperCase()}</span>
+                                <span class="tech-value">${value}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="log-section observations">
+                    <h3>CRITICAL OBSERVATIONS</h3>
+                    <ul class="cyber-list">
                         ${log.observations.map(obs => `<li>${obs}</li>`).join('')}
                     </ul>
                 </div>
 
-                <div class="log-footer">
-                    <span class="log-timestamp">${new Date(log.timestamp).toLocaleString()}</span>
-                    <span class="log-severity ${log.severity.toLowerCase()}">${log.severity}</span>
-                    <span class="log-location">${log.location}</span>
-                    <span class="log-status">${log.status}</span>
+                <div class="log-section recommendations">
+                    <h3>RECOMMENDED ACTIONS</h3>
+                    <ul class="cyber-list">
+                        ${log.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div class="log-status-bar">
+                    <span class="status-item severity-${log.severity.toLowerCase()}">${log.severity}</span>
+                    <span class="status-item">${log.location}</span>
+                    <span class="status-item status-${log.status.toLowerCase()}">${log.status}</span>
+                    <span class="status-item">${new Date(log.timestamp).toLocaleString()}</span>
                 </div>
             </div>
         `;

@@ -912,3 +912,52 @@ body {
     background: var(--neon-green);
     border-radius: 4px;
 }
+
+.probability-meter {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 1rem;
+    border: 1px solid var(--neon-green);
+    margin: 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.probability-value {
+    color: var(--neon-green);
+    font-size: 1.2em;
+    font-weight: bold;
+    font-family: monospace;
+}
+
+.time-to-impact {
+    color: #ff8800;
+    font-size: 0.9em;
+    margin-left: auto;
+}
+
+.tech-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.tech-item {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 0.5rem;
+    border: 1px solid rgba(128, 255, 128, 0.3);
+}
+
+.tech-label {
+    display: block;
+    font-size: 0.7em;
+    color: var(--neon-green);
+    margin-bottom: 0.2rem;
+}
+
+.tech-value {
+    display: block;
+    font-size: 0.9em;
+    font-family: monospace;
+}

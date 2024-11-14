@@ -16,25 +16,48 @@ async function generateLog() {
                 Generate a detailed apocalyptic scenario log in this exact JSON format:
                 {
                     "title": "Brief but dramatic title (max 6 words)",
-                    "content": "A 2-3 sentence overview of the scenario",
+                    "content": "A detailed 2-3 sentence overview using technical language and specific details about the scenario",
                     "timeline": [
-                        "Day 1: Initial event description",
-                        "Day 3: Escalation point",
-                        "Day 7: Critical development",
-                        "Day 14: Current situation"
+                        "T+0h: Initial detection/event with specific metrics",
+                        "T+24h: First major development with data points",
+                        "T+72h: Escalation details with measurements",
+                        "T+168h: Current situation assessment"
                     ],
                     "observations": [
-                        "Scientific observation about the event",
-                        "Social/political impact observation",
-                        "Environmental observation",
-                        "Technological observation"
+                        "Technical scientific observation with measurements",
+                        "Geopolitical/social impact analysis",
+                        "Environmental impact data",
+                        "Infrastructure/technological implications"
                     ],
+                    "technicalData": {
+                        "originCoordinates": "Lat/Long or specific location",
+                        "spreadRate": "Rate of progression with units",
+                        "affectedRadius": "Area affected in km",
+                        "populationExposed": "Number of people at risk",
+                        "probabilityRating": "Calculated probability (0.001% to 5%)",
+                        "timeToImpact": "Estimated time until critical point"
+                    },
                     "severity": "CRITICAL, SEVERE, HIGH, or MODERATE",
                     "location": "Specific location or GLOBAL",
-                    "status": "ACTIVE, MONITORING, or CONTAINED"
-                }`
+                    "status": "ACTIVE, MONITORING, or CONTAINED",
+                    "recommendations": [
+                        "Specific action item for authorities",
+                        "Technical mitigation strategy",
+                        "Population protection measure"
+                    ]
+                }
+
+                Rules:
+                1. Use realistic scientific terminology and measurements
+                2. Include specific numbers, rates, and units
+                3. Base probability ratings on real-world data
+                4. Reference actual geological, biological, or technological systems
+                5. Maintain plausibility while being dramatic
+                6. Include realistic timeframes and progression rates
+                7. Reference actual scientific phenomena`
             }],
-            temperature: 0.9
+            temperature: 0.9,
+            max_tokens: 1000
         });
 
         const logData = JSON.parse(completion.choices[0].message.content);
