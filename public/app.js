@@ -115,19 +115,20 @@ class LogManager {
             <button class="sort-button active" data-sort="recent">RECENT</button>
             <button class="sort-button" data-sort="votes">MOST VOTED</button>
         `;
-
+    
         // Insert before logs container
         this.logsContainer.parentNode.insertBefore(sortControls, this.logsContainer);
-
+    
         // Add click handlers
         sortControls.querySelectorAll('.sort-button').forEach(button => {
-            button.addEventListener('click', () => {
+            button.addEventListener('click', async () => {
                 // Update active button
                 sortControls.querySelectorAll('.sort-button').forEach(b => 
                     b.classList.toggle('active', b === button)
                 );
                 this.currentSort = button.dataset.sort;
-                this.fetchLogs();
+                console.log('Sorting by:', this.currentSort); // Debug log
+                await this.fetchLogs(); // Await the fetch
             });
         });
     }
@@ -142,7 +143,16 @@ class LogManager {
         try {
             const response = await fetch('/api/logs');
             const logs = await response.json();
-            console.log('Fetched logs:', logs); // Debug log
+            
+            // Sort the logs based on current sort selection
+            if (this.currentSort === 'votes') {
+                logs.sort((a, b) => (b.votes || 0) - (a.votes || 0));
+            } else {
+                // Sort by recent (timestamp)
+                logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            }
+            
+            console.log(`Sorted by ${this.currentSort}:`, logs); // Debug log
             this.displayLogs(logs);
         } catch (error) {
             console.error('Error fetching logs:', error);
@@ -240,7 +250,7 @@ class LogManager {
 
     async upvoteLog(logId) {
         if (this.votedLogs.has(logId)) return;
-
+    
         try {
             const response = await fetch('/api/logs?action=vote', {
                 method: 'POST',
@@ -269,6 +279,11 @@ class LogManager {
                     // Save to voted logs
                     this.votedLogs.add(logId);
                     this.saveVotedLogs();
+    
+                    // Refresh the logs if sorted by votes
+                    if (this.currentSort === 'votes') {
+                        await this.fetchLogs();
+                    }
                 }
             }
         } catch (error) {
