@@ -142,6 +142,10 @@ class LogManager {
     async fetchLogs() {
         try {
             const response = await fetch('/api/logs');
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`API Error: ${errorData.error} - ${errorData.details || ''}`);
+            }
             const logs = await response.json();
             
             // Sort the logs based on current sort selection
@@ -156,7 +160,7 @@ class LogManager {
             this.displayLogs(logs);
         } catch (error) {
             console.error('Error fetching logs:', error);
-            this.logsContainer.innerHTML = '<div class="error">ERROR FETCHING LOGS...</div>';
+            this.logsContainer.innerHTML = `<div class="error">ERROR FETCHING LOGS: ${error.message}</div>`;
         }
     }
 

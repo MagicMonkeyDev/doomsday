@@ -84,28 +84,7 @@ async function generateLog() {
 }
 
 export default async function handler(req, res) {
-    if (req.method === 'POST' && req.query.action === 'vote') {
-        try {
-            const { logId } = req.body;
-            const currentVotes = await kv.get(`votes:${logId}`) || 0;
-            await kv.set(`votes:${logId}`, currentVotes + 1);
-            
-            // Update the log's vote count
-            const log = await kv.get(`log:${logId}`);
-            if (log) {
-                log.votes = currentVotes + 1;
-                await kv.set(`log:${logId}`, log);
-            }
-            
-            res.json({ success: true, votes: currentVotes + 1 });
-            return;
-        } catch (error) {
-            console.error('Vote error:', error);
-            res.status(500).json({ error: 'Failed to vote' });
-            return;
-        }
-    }
-
+    // Add CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -116,11 +95,36 @@ export default async function handler(req, res) {
     }
 
     try {
+        // Handle voting
+        if (req.method === 'POST' && req.query.action === 'vote') {
+            try {
+                const { logId } = req.body;
+                const currentVotes = await kv.get(`votes:${logId}`) || 0;
+                await kv.set(`votes:${logId}`, currentVotes + 1);
+                
+                // Update the log's vote count
+                const log = await kv.get(`log:${logId}`);
+                if (log) {
+                    log.votes = currentVotes + 1;
+                    await kv.set(`log:${logId}`, log);
+                }
+                
+                res.json({ success: true, votes: currentVotes + 1 });
+                return;
+            } catch (error) {
+                console.error('Vote error:', error);
+                res.status(500).json({ error: 'Failed to vote' });
+                return;
+            }
+        }
+
         // Get the last generated time
         const lastGeneratedTime = await kv.get('lastGeneratedTime');
         const now = Date.now();
+        console.log('Current time:', now);
+        console.log('Last generated time:', lastGeneratedTime);
 
-        // Generate only one log every 5 minutes
+        // Check if enough time has passed (5 minutes)
         if (!lastGeneratedTime || (now - lastGeneratedTime) >= 5 * 60 * 1000) {
             console.log('Generating new log...');
             const newLog = await generateLog();
@@ -129,30 +133,51 @@ export default async function handler(req, res) {
                 // Store the new log
                 await kv.set(`log:${newLog.id}`, newLog);
                 
-                // Update the list of logs (keep only one new log ID)
+                // Get existing log IDs
                 let logIds = await kv.get('logIds') || [];
-                logIds.unshift(newLog.id);
-                if (logIds.length > 50) logIds = logIds.slice(0, 50);
+                console.log('Existing log IDs:', logIds);
                 
+                // Add new log ID to the front
+                logIds.unshift(newLog.id);
+                
+                // Keep only the last 50 logs
+                if (logIds.length > 50) {
+                    logIds = logIds.slice(0, 50);
+                }
+                
+                // Save updated log IDs
                 await kv.set('logIds', logIds);
                 await kv.set('lastGeneratedTime', now);
                 
-                console.log('New log generated:', newLog.title);
+                console.log('New log generated:', newLog.id);
             }
         } else {
-            console.log('Not enough time passed for new log generation');
+            console.log('Not enough time has passed for new log generation');
+            console.log('Time difference:', now - lastGeneratedTime);
         }
 
-        // Fetch and return all logs
+        // Fetch all logs
         const logIds = await kv.get('logIds') || [];
+        console.log('Retrieved log IDs:', logIds);
+        
         const logs = await Promise.all(
-            logIds.map(id => kv.get(`log:${id}`))
+            logIds.map(async (id) => {
+                const log = await kv.get(`log:${id}`);
+                return log;
+            })
         );
+        
+        console.log('Retrieved logs:', logs.length);
 
+        // Send response
         res.json(logs.filter(Boolean));
 
     } catch (error) {
-        console.error('Error in API:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('Detailed API error:', error);
+        res.status(500).json({ 
+            error: 'Internal server error', 
+            details: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 } 
