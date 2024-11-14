@@ -99,14 +99,41 @@ class PopulationCounter {
 class LogManager {
     constructor() {
         this.logsContainer = document.getElementById('logs');
+        this.modal = document.getElementById('modal');
         this.lastLogId = null;
         this.initialize();
+        this.setupModalListeners();
+    }
+
+    setupModalListeners() {
+        // Close button handler
+        const closeButton = document.querySelector('.close-button');
+        if (closeButton) {
+            closeButton.addEventListener('click', () => this.closeModal());
+        }
+
+        // Click outside modal to close
+        this.modal.addEventListener('click', (e) => {
+            if (e.target === this.modal) {
+                this.closeModal();
+            }
+        });
+
+        // ESC key to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.closeModal();
+            }
+        });
+    }
+
+    closeModal() {
+        this.modal.classList.remove('active');
     }
 
     async initialize() {
         this.logsContainer.innerHTML = '<div class="loading">INITIALIZING LOGS...</div>';
         await this.fetchLogs();
-        // Check for new logs every minute
         setInterval(() => this.checkForNewLogs(), 60 * 1000);
     }
 
@@ -125,7 +152,6 @@ class LogManager {
         this.logsContainer.innerHTML = '';
         logs.forEach((log, index) => {
             const logElement = this.createLogElement(log);
-            // Add staggered animation delay
             logElement.style.animationDelay = `${index * 0.1}s`;
             this.logsContainer.appendChild(logElement);
         });
@@ -135,7 +161,6 @@ class LogManager {
         const logElement = document.createElement('div');
         logElement.className = 'log-entry fade-in';
         
-        // Calculate time ago
         const timeAgo = this.getTimeAgo(new Date(log.timestamp));
         
         logElement.innerHTML = `
@@ -154,11 +179,84 @@ class LogManager {
         `;
 
         // Add click handler for detailed view
-        logElement.querySelector('.details-button').addEventListener('click', () => {
+        const detailsButton = logElement.querySelector('.details-button');
+        detailsButton.addEventListener('click', () => {
             this.showDetailedLog(log);
         });
 
         return logElement;
+    }
+
+    showDetailedLog(log) {
+        const modalContent = document.getElementById('modal-content');
+        
+        modalContent.innerHTML = `
+            <div class="detailed-log">
+                <div class="log-header">
+                    <span class="log-id">${log.id}</span>
+                    <h2 class="log-title">${log.title}</h2>
+                </div>
+                
+                <div class="log-section scenario">
+                    <h3>SCENARIO OVERVIEW</h3>
+                    <p>${log.content}</p>
+                </div>
+
+                <div class="log-section probability">
+                    <div class="probability-meter">
+                        <div class="probability-label">PROBABILITY RATING:</div>
+                        <div class="probability-value">${log.technicalData?.probabilityRating || 'UNKNOWN'}</div>
+                        <div class="time-to-impact">Time to Impact: ${log.technicalData?.timeToImpact || 'UNKNOWN'}</div>
+                    </div>
+                </div>
+
+                <div class="log-section timeline">
+                    <h3>EVENT TIMELINE</h3>
+                    <ul class="cyber-list">
+                        ${log.timeline.map(event => `<li>${event}</li>`).join('')}
+                    </ul>
+                </div>
+
+                ${log.technicalData ? `
+                    <div class="log-section technical">
+                        <h3>TECHNICAL DATA</h3>
+                        <div class="tech-grid">
+                            ${Object.entries(log.technicalData).map(([key, value]) => `
+                                <div class="tech-item">
+                                    <span class="tech-label">${key.replace(/([A-Z])/g, ' $1').toUpperCase()}</span>
+                                    <span class="tech-value">${value}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+
+                <div class="log-section observations">
+                    <h3>CRITICAL OBSERVATIONS</h3>
+                    <ul class="cyber-list">
+                        ${log.observations.map(obs => `<li>${obs}</li>`).join('')}
+                    </ul>
+                </div>
+
+                ${log.recommendations ? `
+                    <div class="log-section recommendations">
+                        <h3>RECOMMENDED ACTIONS</h3>
+                        <ul class="cyber-list">
+                            ${log.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+
+                <div class="log-status-bar">
+                    <span class="status-item severity-${log.severity.toLowerCase()}">${log.severity}</span>
+                    <span class="status-item">${log.location}</span>
+                    <span class="status-item status-${log.status.toLowerCase()}">${log.status}</span>
+                    <span class="status-item">${new Date(log.timestamp).toLocaleString()}</span>
+                </div>
+            </div>
+        `;
+
+        this.modal.classList.add('active');
     }
 
     getTimeAgo(date) {
@@ -227,75 +325,6 @@ class LogManager {
         requestAnimationFrame(() => {
             logElement.style.opacity = '1';
         });
-    }
-
-    showDetailedLog(log) {
-        const modal = document.getElementById('modal');
-        const modalContent = document.getElementById('modal-content');
-        
-        modalContent.innerHTML = `
-            <div class="detailed-log">
-                <div class="log-header">
-                    <span class="log-id">${log.id}</span>
-                    <h2 class="log-title">${log.title}</h2>
-                </div>
-                
-                <div class="log-section scenario">
-                    <h3>SCENARIO OVERVIEW</h3>
-                    <p>${log.content}</p>
-                </div>
-
-                <div class="log-section probability">
-                    <div class="probability-meter">
-                        <div class="probability-label">PROBABILITY RATING:</div>
-                        <div class="probability-value">${log.technicalData.probabilityRating}</div>
-                        <div class="time-to-impact">Time to Impact: ${log.technicalData.timeToImpact}</div>
-                    </div>
-                </div>
-
-                <div class="log-section timeline">
-                    <h3>EVENT TIMELINE</h3>
-                    <ul class="cyber-list">
-                        ${log.timeline.map(event => `<li>${event}</li>`).join('')}
-                    </ul>
-                </div>
-
-                <div class="log-section technical">
-                    <h3>TECHNICAL DATA</h3>
-                    <div class="tech-grid">
-                        ${Object.entries(log.technicalData).map(([key, value]) => `
-                            <div class="tech-item">
-                                <span class="tech-label">${key.replace(/([A-Z])/g, ' $1').toUpperCase()}</span>
-                                <span class="tech-value">${value}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-
-                <div class="log-section observations">
-                    <h3>CRITICAL OBSERVATIONS</h3>
-                    <ul class="cyber-list">
-                        ${log.observations.map(obs => `<li>${obs}</li>`).join('')}
-                    </ul>
-                </div>
-
-                <div class="log-section recommendations">
-                    <h3>RECOMMENDED ACTIONS</h3>
-                    <ul class="cyber-list">
-                        ${log.recommendations.map(rec => `<li>${rec}</li>`).join('')}
-                    </ul>
-                </div>
-
-                <div class="log-status-bar">
-                    <span class="status-item severity-${log.severity.toLowerCase()}">${log.severity}</span>
-                    <span class="status-item">${log.location}</span>
-                    <span class="status-item status-${log.status.toLowerCase()}">${log.status}</span>
-                    <span class="status-item">${new Date(log.timestamp).toLocaleString()}</span>
-                </div>
-            </div>
-        `;
-
-        modal.classList.add('active');
     }
 }
 

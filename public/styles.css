@@ -225,67 +225,44 @@ body {
     height: 100%;
     background: rgba(0, 0, 0, 0.9);
     z-index: 1000;
+    overflow-y: auto;
 }
 
 .modal.active {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: block;
 }
 
 .modal-content {
-    background: rgba(0, 0, 0, 0.95);
-    border: 1px solid var(--neon-green);
-    padding: 30px;
-    max-width: 800px;
-    width: 90%;
-    max-height: 85vh;
-    overflow-y: auto;
     position: relative;
-    scrollbar-width: thin; /* Firefox */
-    scrollbar-color: var(--neon-green) rgba(0, 0, 0, 0.3); /* Firefox */
-}
-
-/* Webkit browsers (Chrome, Safari, Edge) scrollbar styles */
-.modal-content::-webkit-scrollbar {
-    width: 8px;
-}
-
-.modal-content::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(128, 255, 128, 0.1);
-}
-
-.modal-content::-webkit-scrollbar-thumb {
-    background: var(--neon-green);
-    border-radius: 0;
-    box-shadow: 0 0 5px rgba(128, 255, 128, 0.5);
-}
-
-.modal-content::-webkit-scrollbar-thumb:hover {
-    background: #00ff00;
-    box-shadow: 0 0 10px rgba(128, 255, 128, 0.8);
-}
-
-/* Optional: Add a subtle glow effect to the track */
-.modal-content::-webkit-scrollbar-track:hover {
-    background: rgba(0, 0, 0, 0.4);
-    box-shadow: inset 0 0 5px rgba(128, 255, 128, 0.2);
+    background: rgba(0, 0, 0, 0.95);
+    margin: 2rem auto;
+    padding: 2rem;
+    width: 90%;
+    max-width: 1200px;
+    border: 1px solid var(--neon-green);
+    box-shadow: 0 0 20px rgba(128, 255, 128, 0.2);
 }
 
 .close-button {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    font-size: 24px;
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    background: transparent;
+    border: 1px solid var(--neon-green);
     color: var(--neon-green);
+    width: 2rem;
+    height: 2rem;
+    font-size: 1.5rem;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: all 0.3s ease;
 }
 
 .close-button:hover {
-    transform: scale(1.2);
-    text-shadow: 0 0 10px var(--neon-green);
+    background: rgba(128, 255, 128, 0.1);
+    transform: scale(1.1);
 }
 
 /* Add a hover state to the cards to show they're clickable */
