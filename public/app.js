@@ -101,48 +101,54 @@ class LogManager {
         this.logsContainer = document.getElementById('logs');
         this.modal = document.getElementById('modal');
         this.lastLogId = null;
+        this.currentSort = 'recent';
+        this.votedLogs = new Set(this.getVotedLogs());
         this.initialize();
+        this.setupSortControls();
     }
 
-    async initialize() {
-        this.logsContainer.innerHTML = '<div class="loading">INITIALIZING LOGS...</div>';
-        await this.fetchLogs();
-        setInterval(() => this.checkForNewLogs(), 60 * 1000);
+    setupSortControls() {
+        // Create sort controls
+        const sortControls = document.createElement('div');
+        sortControls.className = 'sort-controls';
+        sortControls.innerHTML = `
+            <button class="sort-button active" data-sort="recent">RECENT</button>
+            <button class="sort-button" data-sort="votes">MOST VOTED</button>
+        `;
+
+        // Insert before logs container
+        this.logsContainer.parentNode.insertBefore(sortControls, this.logsContainer);
+
+        // Add click handlers
+        sortControls.querySelectorAll('.sort-button').forEach(button => {
+            button.addEventListener('click', () => {
+                this.currentSort = button.dataset.sort;
+                // Update active button
+                sortControls.querySelectorAll('.sort-button').forEach(b => 
+                    b.classList.toggle('active', b === button)
+                );
+                this.fetchLogs();
+            });
+        });
+    }
+
+    // Store voted logs in localStorage
+    getVotedLogs() {
+        return JSON.parse(localStorage.getItem('votedLogs') || '[]');
+    }
+
+    saveVotedLogs() {
+        localStorage.setItem('votedLogs', JSON.stringify(Array.from(this.votedLogs)));
     }
 
     async fetchLogs() {
         try {
-            const response = await fetch('/api/logs');
+            const response = await fetch(`/api/logs?sort=${this.currentSort}`);
             const logs = await response.json();
-            console.log('Fetched logs:', logs); // Debug log
             this.displayLogs(logs);
         } catch (error) {
             console.error('Error fetching logs:', error);
             this.logsContainer.innerHTML = '<div class="error">ERROR FETCHING LOGS...</div>';
-        }
-    }
-
-    async checkForNewLogs() {
-        try {
-            const response = await fetch('/api/logs');
-            const logs = await response.json();
-            if (logs.length > 0 && logs[0].id !== this.lastLogId) {
-                this.displayLogs(logs);
-            }
-        } catch (error) {
-            console.error('Error checking for new logs:', error);
-        }
-    }
-
-    displayLogs(logs) {
-        this.logsContainer.innerHTML = '';
-        logs.forEach((log, index) => {
-            const logElement = this.createLogElement(log);
-            logElement.style.animationDelay = `${index * 0.1}s`;
-            this.logsContainer.appendChild(logElement);
-        });
-        if (logs.length > 0) {
-            this.lastLogId = logs[0].id;
         }
     }
 
@@ -152,11 +158,16 @@ class LogManager {
         logElement.dataset.logId = log.id;
         
         const timeAgo = this.getTimeAgo(new Date(log.timestamp));
+        const hasVoted = this.votedLogs.has(log.id);
         
         logElement.innerHTML = `
             <div class="log-header">
                 <div class="vote-section">
-                    <button class="vote-button" title="Upvote this scenario">▲</button>
+                    <button class="vote-button ${hasVoted ? 'voted' : ''}" 
+                            title="${hasVoted ? 'Already voted' : 'Upvote this scenario'}"
+                            ${hasVoted ? 'disabled' : ''}>
+                        ▲
+                    </button>
                     <span class="vote-count">${log.votes || 0}</span>
                 </div>
                 <span class="log-id">${log.id}</span>
@@ -174,18 +185,70 @@ class LogManager {
 
         // Add vote handler
         const voteButton = logElement.querySelector('.vote-button');
-        voteButton.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            await this.upvoteLog(log.id);
-        });
+        if (!hasVoted) {
+            voteButton.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await this.upvoteLog(log.id);
+            });
+        }
 
-        // Existing details button handler
+        // Add details handler
         const detailsButton = logElement.querySelector('.details-button');
         detailsButton.addEventListener('click', () => {
             this.showDetailedLog(log);
         });
 
         return logElement;
+    }
+
+    async upvoteLog(logId) {
+        if (this.votedLogs.has(logId)) return;
+
+        try {
+            const response = await fetch('/api/logs?action=vote', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ logId })
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                // Update vote count
+                const voteCount = document.querySelector(`[data-log-id="${logId}"] .vote-count`);
+                const voteButton = document.querySelector(`[data-log-id="${logId}"] .vote-button`);
+                
+                if (voteCount && voteButton) {
+                    voteCount.textContent = data.votes;
+                    voteCount.classList.add('vote-updated');
+                    setTimeout(() => voteCount.classList.remove('vote-updated'), 300);
+                    
+                    // Mark as voted
+                    voteButton.classList.add('voted');
+                    voteButton.disabled = true;
+                    voteButton.title = 'Already voted';
+                    
+                    // Save to voted logs
+                    this.votedLogs.add(logId);
+                    this.saveVotedLogs();
+                }
+            }
+        } catch (error) {
+            console.error('Error voting:', error);
+        }
+    }
+
+    displayLogs(logs) {
+        this.logsContainer.innerHTML = '';
+        logs.forEach((log, index) => {
+            const logElement = this.createLogElement(log);
+            logElement.style.animationDelay = `${index * 0.1}s`;
+            this.logsContainer.appendChild(logElement);
+        });
+        if (logs.length > 0) {
+            this.lastLogId = logs[0].id;
+        }
     }
 
     showDetailedLog(log) {
@@ -249,30 +312,6 @@ class LogManager {
         }
         
         return 'Just now';
-    }
-
-    async upvoteLog(logId) {
-        try {
-            const response = await fetch('/api/logs?action=vote', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ logId })
-            });
-            
-            const data = await response.json();
-            if (data.success) {
-                const voteCount = document.querySelector(`[data-log-id="${logId}"] .vote-count`);
-                if (voteCount) {
-                    voteCount.textContent = data.votes;
-                    voteCount.classList.add('vote-updated');
-                    setTimeout(() => voteCount.classList.remove('vote-updated'), 300);
-                }
-            }
-        } catch (error) {
-            console.error('Error voting:', error);
-        }
     }
 }
 

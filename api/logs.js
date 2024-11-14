@@ -121,13 +121,27 @@ export default async function handler(req, res) {
             }
         }
 
-        // Fetch and return all logs
+        // Fetch all logs and their votes
         const logIds = await kv.get('logIds') || [];
         const logs = await Promise.all(
-            logIds.map(id => kv.get(`log:${id}`))
+            logIds.map(async (id) => {
+                const log = await kv.get(`log:${id}`);
+                return log;
+            })
         );
 
-        res.json(logs.filter(Boolean));
+        // Filter out null values and sort based on query parameter
+        const validLogs = logs.filter(Boolean);
+        const sortBy = req.query.sort || 'recent';
+        
+        if (sortBy === 'votes') {
+            validLogs.sort((a, b) => (b.votes || 0) - (a.votes || 0));
+        } else {
+            // Default sort by recent
+            validLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        }
+
+        res.json(validLogs);
 
     } catch (error) {
         console.error('Error in API:', error);

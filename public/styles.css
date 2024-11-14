@@ -956,6 +956,7 @@ body {
     padding: 0.5rem 1rem;
     cursor: pointer;
     transition: all 0.3s ease;
+    font-family: 'Share Tech Mono', monospace;
 }
 
 .sort-button:hover {
@@ -1010,42 +1011,16 @@ body {
     align-items: center;
     gap: 2px;
     margin-right: 15px;
+    min-width: 30px;
 }
 
-.vote-button {
-    background: transparent;
-    border: none;
-    color: var(--neon-green);
-    cursor: pointer;
-    font-size: 1.2em;
-    padding: 2px 8px;
-    transition: all 0.2s ease;
+.vote-button.voted {
+    color: #666;
+    cursor: not-allowed;
+    transform: none;
 }
 
-.vote-button:hover {
-    color: #fff;
-    transform: scale(1.2);
-}
-
-.vote-count {
-    font-size: 0.8em;
-    color: var(--neon-green);
-    transition: all 0.2s ease;
-}
-
-.vote-updated {
-    animation: voteUpdate 0.3s ease;
-}
-
-@keyframes voteUpdate {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.5); color: #fff; }
-    100% { transform: scale(1); }
-}
-
-/* Update log-header to accommodate vote section */
-.log-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.5rem;
+.vote-button.voted:hover {
+    transform: none;
+    color: #666;
 }
