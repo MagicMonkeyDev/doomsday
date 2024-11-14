@@ -50,10 +50,15 @@ async function generateLog() {
 }
 
 export default async function handler(req, res) {
+    console.log('API endpoint called');
     try {
         // Get the last generated time
         const lastGeneratedTime = await kv.get('lastGeneratedTime');
         const now = Date.now();
+        
+        console.log('Last generated time:', lastGeneratedTime);
+        console.log('Current time:', now);
+        console.log('Time difference:', now - (lastGeneratedTime || 0));
 
         // Check if we need to generate a new log (5 minutes passed)
         if (!lastGeneratedTime || (now - lastGeneratedTime) >= 5 * 60 * 1000) {
@@ -61,6 +66,7 @@ export default async function handler(req, res) {
             const newLog = await generateLog();
             
             if (newLog) {
+                console.log('New log generated:', newLog);
                 // Store the new log
                 await kv.set(`log:${newLog.id}`, newLog);
                 
@@ -72,20 +78,26 @@ export default async function handler(req, res) {
                 await kv.set('logIds', logIds);
                 await kv.set('lastGeneratedTime', now);
                 
-                console.log('New log generated:', newLog.title);
+                console.log('Log stored successfully');
             }
+        } else {
+            console.log('Not enough time has passed for new log generation');
         }
 
         // Fetch and return all logs
         const logIds = await kv.get('logIds') || [];
+        console.log('Retrieved log IDs:', logIds);
+        
         const logs = await Promise.all(
             logIds.map(id => kv.get(`log:${id}`))
         );
+        
+        console.log('Retrieved logs:', logs.length);
 
         res.json(logs.filter(Boolean));
 
     } catch (error) {
         console.error('Error in API:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: 'Internal server error', details: error.message });
     }
 } 
