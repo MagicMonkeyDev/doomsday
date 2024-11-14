@@ -99,14 +99,13 @@ class PopulationCounter {
 class LogManager {
     constructor() {
         this.logsContainer = document.getElementById('logs');
-        this.lastCheckTime = 0;
+        this.lastLogId = null;
         this.initialize();
     }
 
     async initialize() {
         this.logsContainer.innerHTML = '<div class="loading">INITIALIZING LOGS...</div>';
         await this.fetchLogs();
-        
         // Check for new logs every minute
         setInterval(() => this.checkForNewLogs(), 60 * 1000);
     }
@@ -120,6 +119,68 @@ class LogManager {
             console.error('Error fetching logs:', error);
             this.logsContainer.innerHTML = '<div class="error">ERROR FETCHING LOGS...</div>';
         }
+    }
+
+    displayLogs(logs) {
+        this.logsContainer.innerHTML = '';
+        logs.forEach((log, index) => {
+            const logElement = this.createLogElement(log);
+            // Add staggered animation delay
+            logElement.style.animationDelay = `${index * 0.1}s`;
+            this.logsContainer.appendChild(logElement);
+        });
+    }
+
+    createLogElement(log) {
+        const logElement = document.createElement('div');
+        logElement.className = 'log-entry fade-in';
+        
+        // Calculate time ago
+        const timeAgo = this.getTimeAgo(new Date(log.timestamp));
+        
+        logElement.innerHTML = `
+            <div class="log-header">
+                <span class="log-id">${log.id}</span>
+                <span class="log-time">${timeAgo}</span>
+                <span class="severity-badge ${log.severity.toLowerCase()}">${log.severity}</span>
+            </div>
+            <h3 class="log-title">${log.title}</h3>
+            <p class="log-content">${log.content}</p>
+            <div class="log-footer">
+                <span class="location-badge">${log.location}</span>
+                <span class="status-badge ${log.status.toLowerCase()}">${log.status}</span>
+            </div>
+            <button class="details-button">VIEW DETAILS</button>
+        `;
+
+        // Add click handler for detailed view
+        logElement.querySelector('.details-button').addEventListener('click', () => {
+            this.showDetailedLog(log);
+        });
+
+        return logElement;
+    }
+
+    getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        
+        const intervals = {
+            year: 31536000,
+            month: 2592000,
+            week: 604800,
+            day: 86400,
+            hour: 3600,
+            minute: 60
+        };
+
+        for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+            const interval = Math.floor(seconds / secondsInUnit);
+            if (interval >= 1) {
+                return `${interval} ${unit}${interval === 1 ? '' : 's'} ago`;
+            }
+        }
+        
+        return 'Just now';
     }
 
     async checkForNewLogs() {
@@ -138,11 +199,6 @@ class LogManager {
                 console.error('Error checking for new logs:', error);
             }
         }
-    }
-
-    displayLogs(logs) {
-        this.logsContainer.innerHTML = '';
-        logs.forEach(log => this.addNewLog(log));
     }
 
     addNewLog(log) {

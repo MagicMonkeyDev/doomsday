@@ -774,3 +774,98 @@ body {
 .log-severity.severe { color: #ff8800; }
 .log-severity.high { color: #ffcc00; }
 .log-severity.moderate { color: #00cc00; }
+
+.log-entry {
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid var(--neon-green);
+    margin: 1rem 0;
+    padding: 1rem;
+    transition: all 0.3s ease;
+    opacity: 0;
+    animation: fadeIn 0.5s forwards;
+}
+
+.log-entry:hover {
+    transform: translateX(5px);
+    box-shadow: -5px 0 15px rgba(128, 255, 128, 0.2);
+}
+
+.log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.log-id {
+    color: var(--neon-green);
+    font-family: monospace;
+}
+
+.log-time {
+    font-size: 0.8em;
+    opacity: 0.7;
+}
+
+.severity-badge {
+    padding: 0.2em 0.5em;
+    border-radius: 2px;
+    font-size: 0.8em;
+}
+
+.severity-badge.critical { background: rgba(255, 0, 0, 0.2); color: #ff4444; }
+.severity-badge.severe { background: rgba(255, 136, 0, 0.2); color: #ff8800; }
+.severity-badge.high { background: rgba(255, 204, 0, 0.2); color: #ffcc00; }
+.severity-badge.moderate { background: rgba(0, 255, 0, 0.2); color: #00ff00; }
+
+.log-title {
+    color: var(--neon-green);
+    margin: 0.5rem 0;
+}
+
+.log-content {
+    margin: 0.5rem 0;
+    line-height: 1.4;
+}
+
+.log-footer {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.location-badge, .status-badge {
+    font-size: 0.8em;
+    padding: 0.2em 0.5em;
+    border: 1px solid rgba(128, 255, 128, 0.3);
+}
+
+.status-badge.active {
+    animation: pulse 2s infinite;
+}
+
+.details-button {
+    background: transparent;
+    border: 1px solid var(--neon-green);
+    color: var(--neon-green);
+    padding: 0.5em 1em;
+    margin-top: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.details-button:hover {
+    background: rgba(128, 255, 128, 0.1);
+    box-shadow: 0 0 10px rgba(128, 255, 128, 0.3);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
