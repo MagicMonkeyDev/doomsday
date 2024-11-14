@@ -149,11 +149,16 @@ class LogManager {
     createLogElement(log) {
         const logElement = document.createElement('div');
         logElement.className = 'log-entry fade-in';
+        logElement.dataset.logId = log.id;
         
         const timeAgo = this.getTimeAgo(new Date(log.timestamp));
         
         logElement.innerHTML = `
             <div class="log-header">
+                <div class="vote-section">
+                    <button class="vote-button" title="Upvote this scenario">▲</button>
+                    <span class="vote-count">${log.votes || 0}</span>
+                </div>
                 <span class="log-id">${log.id}</span>
                 <span class="log-time">${timeAgo}</span>
                 <span class="severity-badge ${log.severity.toLowerCase()}">${log.severity}</span>
@@ -167,7 +172,14 @@ class LogManager {
             <button class="details-button">VIEW DETAILS</button>
         `;
 
-        // Add click handler for detailed view
+        // Add vote handler
+        const voteButton = logElement.querySelector('.vote-button');
+        voteButton.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            await this.upvoteLog(log.id);
+        });
+
+        // Existing details button handler
         const detailsButton = logElement.querySelector('.details-button');
         detailsButton.addEventListener('click', () => {
             this.showDetailedLog(log);
@@ -237,6 +249,30 @@ class LogManager {
         }
         
         return 'Just now';
+    }
+
+    async upvoteLog(logId) {
+        try {
+            const response = await fetch('/api/logs?action=vote', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ logId })
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                const voteCount = document.querySelector(`[data-log-id="${logId}"] .vote-count`);
+                if (voteCount) {
+                    voteCount.textContent = data.votes;
+                    voteCount.classList.add('vote-updated');
+                    setTimeout(() => voteCount.classList.remove('vote-updated'), 300);
+                }
+            }
+        } catch (error) {
+            console.error('Error voting:', error);
+        }
     }
 }
 

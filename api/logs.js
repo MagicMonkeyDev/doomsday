@@ -64,6 +64,28 @@ async function generateLog() {
 }
 
 export default async function handler(req, res) {
+    if (req.method === 'POST' && req.query.action === 'vote') {
+        try {
+            const { logId } = req.body;
+            const currentVotes = await kv.get(`votes:${logId}`) || 0;
+            await kv.set(`votes:${logId}`, currentVotes + 1);
+            
+            // Update the log's vote count
+            const log = await kv.get(`log:${logId}`);
+            if (log) {
+                log.votes = currentVotes + 1;
+                await kv.set(`log:${logId}`, log);
+            }
+            
+            res.json({ success: true, votes: currentVotes + 1 });
+            return;
+        } catch (error) {
+            console.error('Vote error:', error);
+            res.status(500).json({ error: 'Failed to vote' });
+            return;
+        }
+    }
+
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
