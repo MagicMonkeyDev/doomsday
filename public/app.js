@@ -103,8 +103,8 @@ class LogManager {
         this.lastLogId = null;
         this.currentSort = 'recent';
         this.votedLogs = new Set(this.getVotedLogs());
-        this.initialize();
         this.setupSortControls();
+        this.initialize();
     }
 
     setupSortControls() {
@@ -122,34 +122,71 @@ class LogManager {
         // Add click handlers
         sortControls.querySelectorAll('.sort-button').forEach(button => {
             button.addEventListener('click', () => {
-                this.currentSort = button.dataset.sort;
                 // Update active button
                 sortControls.querySelectorAll('.sort-button').forEach(b => 
                     b.classList.toggle('active', b === button)
                 );
+                this.currentSort = button.dataset.sort;
                 this.fetchLogs();
             });
         });
     }
 
-    // Store voted logs in localStorage
+    async initialize() {
+        this.logsContainer.innerHTML = '<div class="loading">INITIALIZING LOGS...</div>';
+        await this.fetchLogs();
+        setInterval(() => this.checkForNewLogs(), 60 * 1000);
+    }
+
+    async fetchLogs() {
+        try {
+            const response = await fetch('/api/logs');
+            const logs = await response.json();
+            console.log('Fetched logs:', logs); // Debug log
+            this.displayLogs(logs);
+        } catch (error) {
+            console.error('Error fetching logs:', error);
+            this.logsContainer.innerHTML = '<div class="error">ERROR FETCHING LOGS...</div>';
+        }
+    }
+
+    async checkForNewLogs() {
+        try {
+            const response = await fetch('/api/logs');
+            const logs = await response.json();
+            if (logs.length > 0 && logs[0].id !== this.lastLogId) {
+                this.displayLogs(logs);
+            }
+        } catch (error) {
+            console.error('Error checking for new logs:', error);
+        }
+    }
+
+    displayLogs(logs) {
+        if (!Array.isArray(logs)) {
+            console.error('Expected array of logs, got:', logs);
+            this.logsContainer.innerHTML = '<div class="error">INVALID LOG DATA</div>';
+            return;
+        }
+
+        this.logsContainer.innerHTML = '';
+        logs.forEach((log, index) => {
+            const logElement = this.createLogElement(log);
+            logElement.style.animationDelay = `${index * 0.1}s`;
+            this.logsContainer.appendChild(logElement);
+        });
+        
+        if (logs.length > 0) {
+            this.lastLogId = logs[0].id;
+        }
+    }
+
     getVotedLogs() {
         return JSON.parse(localStorage.getItem('votedLogs') || '[]');
     }
 
     saveVotedLogs() {
         localStorage.setItem('votedLogs', JSON.stringify(Array.from(this.votedLogs)));
-    }
-
-    async fetchLogs() {
-        try {
-            const response = await fetch(`/api/logs?sort=${this.currentSort}`);
-            const logs = await response.json();
-            this.displayLogs(logs);
-        } catch (error) {
-            console.error('Error fetching logs:', error);
-            this.logsContainer.innerHTML = '<div class="error">ERROR FETCHING LOGS...</div>';
-        }
     }
 
     createLogElement(log) {
@@ -236,18 +273,6 @@ class LogManager {
             }
         } catch (error) {
             console.error('Error voting:', error);
-        }
-    }
-
-    displayLogs(logs) {
-        this.logsContainer.innerHTML = '';
-        logs.forEach((log, index) => {
-            const logElement = this.createLogElement(log);
-            logElement.style.animationDelay = `${index * 0.1}s`;
-            this.logsContainer.appendChild(logElement);
-        });
-        if (logs.length > 0) {
-            this.lastLogId = logs[0].id;
         }
     }
 
