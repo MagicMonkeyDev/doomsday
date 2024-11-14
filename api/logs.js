@@ -95,52 +95,74 @@ async function generateLog() {
 export default async function handler(req, res) {
     console.log('API endpoint called');
     try {
-        // Get the last generated time
-        const lastGeneratedTime = await kv.get('lastGeneratedTime');
-        const now = Date.now();
-        
-        console.log('Last generated time:', lastGeneratedTime);
-        console.log('Current time:', now);
-        console.log('Time difference:', now - (lastGeneratedTime || 0));
-
-        // Check if we need to generate a new log (5 minutes passed)
-        if (!lastGeneratedTime || (now - lastGeneratedTime) >= 5 * 60 * 1000) {
-            console.log('Generating new log...');
-            const newLog = await generateLog();
+        if (req.method === 'POST' && req.query.action === 'vote') {
+            const { logId } = req.body;
+            const currentVotes = await kv.get(`votes:${logId}`) || 0;
+            await kv.set(`votes:${logId}`, currentVotes + 1);
             
-            if (newLog) {
-                console.log('New log generated:', newLog);
-                // Store the new log
-                await kv.set(`log:${newLog.id}`, newLog);
-                
-                // Update the list of logs
-                let logIds = await kv.get('logIds') || [];
-                logIds.unshift(newLog.id);
-                if (logIds.length > 50) logIds = logIds.slice(0, 50);
-                
-                await kv.set('logIds', logIds);
-                await kv.set('lastGeneratedTime', now);
-                
-                console.log('Log stored successfully');
-            }
-        } else {
-            console.log('Not enough time has passed for new log generation');
+            res.json({ success: true, votes: currentVotes + 1 });
+            return;
         }
 
-        // Fetch and return all logs
-        const logIds = await kv.get('logIds') || [];
-        console.log('Retrieved log IDs:', logIds);
-        
-        const logs = await Promise.all(
-            logIds.map(id => kv.get(`log:${id}`))
-        );
-        
-        console.log('Retrieved logs:', logs.length);
+        if (req.method === 'GET') {
+            // Get the last generated time
+            const lastGeneratedTime = await kv.get('lastGeneratedTime');
+            const now = Date.now();
+            
+            console.log('Last generated time:', lastGeneratedTime);
+            console.log('Current time:', now);
+            console.log('Time difference:', now - (lastGeneratedTime || 0));
 
-        res.json(logs.filter(Boolean));
+            // Check if we need to generate a new log (5 minutes passed)
+            if (!lastGeneratedTime || (now - lastGeneratedTime) >= 5 * 60 * 1000) {
+                console.log('Generating new log...');
+                const newLog = await generateLog();
+                
+                if (newLog) {
+                    console.log('New log generated:', newLog);
+                    // Store the new log
+                    await kv.set(`log:${newLog.id}`, newLog);
+                    
+                    // Update the list of logs
+                    let logIds = await kv.get('logIds') || [];
+                    logIds.unshift(newLog.id);
+                    if (logIds.length > 50) logIds = logIds.slice(0, 50);
+                    
+                    await kv.set('logIds', logIds);
+                    await kv.set('lastGeneratedTime', now);
+                    
+                    console.log('Log stored successfully');
+                }
+            } else {
+                console.log('Not enough time has passed for new log generation');
+            }
+
+            // Fetch all logs and their votes
+            const logIds = await kv.get('logIds') || [];
+            const logs = await Promise.all(
+                logIds.map(async (id) => {
+                    const log = await kv.get(`log:${id}`);
+                    const votes = await kv.get(`votes:${id}`) || 0;
+                    return log ? { ...log, votes } : null;
+                })
+            );
+
+            // Filter out null values and sort based on query parameter
+            const validLogs = logs.filter(Boolean);
+            const sortBy = req.query.sort || 'recent';
+            
+            if (sortBy === 'votes') {
+                validLogs.sort((a, b) => b.votes - a.votes);
+            } else {
+                // Default sort by recent
+                validLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            }
+
+            res.json(validLogs);
+        }
 
     } catch (error) {
-        console.error('Error in API:', error);
-        res.status(500).json({ error: 'Internal server error', details: error.message });
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 } 

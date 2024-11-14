@@ -101,8 +101,10 @@ class LogManager {
         this.logsContainer = document.getElementById('logs');
         this.modal = document.getElementById('modal');
         this.lastLogId = null;
+        this.currentSort = 'recent';
         this.initialize();
         this.setupModalListeners();
+        this.setupSortControls();
     }
 
     setupModalListeners() {
@@ -131,15 +133,33 @@ class LogManager {
         this.modal.classList.remove('active');
     }
 
-    async initialize() {
-        this.logsContainer.innerHTML = '<div class="loading">INITIALIZING LOGS...</div>';
-        await this.fetchLogs();
-        setInterval(() => this.checkForNewLogs(), 60 * 1000);
+    setupSortControls() {
+        // Add this HTML to your index.html above the logs container
+        const sortControls = document.createElement('div');
+        sortControls.className = 'sort-controls';
+        sortControls.innerHTML = `
+            <div class="sort-buttons">
+                <button class="sort-button active" data-sort="recent">RECENT</button>
+                <button class="sort-button" data-sort="votes">MOST VOTED</button>
+            </div>
+        `;
+        this.logsContainer.parentNode.insertBefore(sortControls, this.logsContainer);
+
+        // Add click handlers for sort buttons
+        sortControls.querySelectorAll('.sort-button').forEach(button => {
+            button.addEventListener('click', () => {
+                this.currentSort = button.dataset.sort;
+                sortControls.querySelectorAll('.sort-button').forEach(b => 
+                    b.classList.toggle('active', b === button)
+                );
+                this.fetchLogs();
+            });
+        });
     }
 
     async fetchLogs() {
         try {
-            const response = await fetch('/api/logs');
+            const response = await fetch(`/api/logs?sort=${this.currentSort}`);
             const logs = await response.json();
             this.displayLogs(logs);
         } catch (error) {
@@ -160,6 +180,7 @@ class LogManager {
     createLogElement(log) {
         const logElement = document.createElement('div');
         logElement.className = 'log-entry fade-in';
+        logElement.dataset.logId = log.id;
         
         const timeAgo = this.getTimeAgo(new Date(log.timestamp));
         
@@ -167,6 +188,10 @@ class LogManager {
             <div class="log-header">
                 <span class="log-id">${log.id}</span>
                 <span class="log-time">${timeAgo}</span>
+                <div class="vote-container">
+                    <button class="vote-button" aria-label="Upvote">▲</button>
+                    <span class="vote-count">${log.votes || 0}</span>
+                </div>
                 <span class="severity-badge ${log.severity.toLowerCase()}">${log.severity}</span>
             </div>
             <h3 class="log-title">${log.title}</h3>
@@ -178,9 +203,13 @@ class LogManager {
             <button class="details-button">VIEW DETAILS</button>
         `;
 
-        // Add click handler for detailed view
-        const detailsButton = logElement.querySelector('.details-button');
-        detailsButton.addEventListener('click', () => {
+        // Add click handlers
+        logElement.querySelector('.vote-button').addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.upvoteLog(log.id);
+        });
+
+        logElement.querySelector('.details-button').addEventListener('click', () => {
             this.showDetailedLog(log);
         });
 
@@ -325,6 +354,31 @@ class LogManager {
         requestAnimationFrame(() => {
             logElement.style.opacity = '1';
         });
+    }
+
+    async upvoteLog(logId) {
+        try {
+            const response = await fetch('/api/logs?action=vote', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ logId })
+            });
+            const data = await response.json();
+            if (data.success) {
+                // Update the vote count in the UI
+                const voteCount = document.querySelector(`[data-log-id="${logId}"] .vote-count`);
+                if (voteCount) {
+                    voteCount.textContent = data.votes;
+                    // Add animation class
+                    voteCount.classList.add('vote-updated');
+                    setTimeout(() => voteCount.classList.remove('vote-updated'), 300);
+                }
+            }
+        } catch (error) {
+            console.error('Error upvoting:', error);
+        }
     }
 }
 

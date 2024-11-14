@@ -938,3 +938,71 @@ body {
     font-size: 0.9em;
     font-family: monospace;
 }
+
+.sort-controls {
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--neon-green);
+}
+
+.sort-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.sort-button {
+    background: transparent;
+    border: 1px solid var(--neon-green);
+    color: var(--neon-green);
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.sort-button:hover {
+    background: rgba(128, 255, 128, 0.1);
+}
+
+.sort-button.active {
+    background: var(--neon-green);
+    color: black;
+}
+
+.vote-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.vote-button {
+    background: transparent;
+    border: none;
+    color: var(--neon-green);
+    cursor: pointer;
+    font-size: 1.2em;
+    padding: 0.2rem;
+    transition: all 0.3s ease;
+}
+
+.vote-button:hover {
+    transform: scale(1.2);
+    color: #fff;
+}
+
+.vote-count {
+    font-size: 0.8em;
+    transition: all 0.3s ease;
+}
+
+.vote-updated {
+    animation: voteUpdate 0.3s ease;
+}
+
+@keyframes voteUpdate {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.5); }
+    100% { transform: scale(1); }
+}
