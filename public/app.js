@@ -99,13 +99,16 @@ class PopulationCounter {
 class LogManager {
     constructor() {
         this.logsContainer = document.getElementById('logs');
+        this.lastCheckTime = 0;
         this.initialize();
     }
 
     async initialize() {
         this.logsContainer.innerHTML = '<div class="loading">INITIALIZING LOGS...</div>';
         await this.fetchLogs();
-        setInterval(() => this.checkForNewLogs(), 5 * 60 * 1000);
+        
+        // Check for new logs every minute
+        setInterval(() => this.checkForNewLogs(), 60 * 1000);
     }
 
     async fetchLogs() {
@@ -120,14 +123,20 @@ class LogManager {
     }
 
     async checkForNewLogs() {
-        try {
-            const response = await fetch('/api/logs?latest=true');
-            const latestLog = await response.json();
-            if (latestLog) {
-                this.addNewLog(latestLog);
+        const currentTime = Date.now();
+        // Only try to generate a new log if 5 minutes have passed
+        if (currentTime - this.lastCheckTime >= 5 * 60 * 1000) {
+            try {
+                const response = await fetch('/api/logs?generate=true');
+                const newLog = await response.json();
+                if (newLog && (!this.lastLogId || newLog.id !== this.lastLogId)) {
+                    this.addNewLog(newLog);
+                    this.lastLogId = newLog.id;
+                }
+                this.lastCheckTime = currentTime;
+            } catch (error) {
+                console.error('Error checking for new logs:', error);
             }
-        } catch (error) {
-            console.error('Error checking for new logs:', error);
         }
     }
 

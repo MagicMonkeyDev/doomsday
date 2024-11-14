@@ -2,6 +2,7 @@
   "name": "eotw",
   "version": "1.0.0",
   "dependencies": {
+    "@vercel/kv": "^0.2.4",
     "openai": "^4.0.0"
   }
-} 
+}

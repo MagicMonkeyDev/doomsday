@@ -1,11 +1,9 @@
-const OpenAI = require('openai');
+import { kv } from '@vercel/kv';
+import OpenAI from 'openai';
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
-
-// In-memory storage (Note: This will reset on each deployment)
-let logs = [];
 
 async function generateLog() {
     try {
@@ -13,18 +11,28 @@ async function generateLog() {
             model: "gpt-3.5-turbo",
             messages: [{
                 role: "system",
-                content: `You are a dystopian scenario generator for the EOTW (End of the World) protocol. 
-                Generate a new apocalyptic scenario log in the following JSON format:
+                content: `You are the EOTW (End of the World) Protocol AI, a sophisticated system designed to monitor and document potential extinction-level events and apocalyptic scenarios.
+
+                Generate a detailed apocalyptic scenario log in this exact JSON format:
                 {
-                    "title": "Brief, impactful title",
-                    "content": "Main scenario description",
-                    "timeline": ["Event 1", "Event 2", "Event 3"],
-                    "observations": ["Observation 1", "Observation 2", "Observation 3"],
-                    "severity": "Choose from: CRITICAL, SEVERE, HIGH, MODERATE",
-                    "location": "Affected location",
-                    "status": "Choose from: ACTIVE, MONITORING, CONTAINED"
-                }
-                Make it unique, scientifically plausible, and detailed.`
+                    "title": "Brief but dramatic title (max 6 words)",
+                    "content": "A 2-3 sentence overview of the scenario",
+                    "timeline": [
+                        "Day 1: Initial event description",
+                        "Day 3: Escalation point",
+                        "Day 7: Critical development",
+                        "Day 14: Current situation"
+                    ],
+                    "observations": [
+                        "Scientific observation about the event",
+                        "Social/political impact observation",
+                        "Environmental observation",
+                        "Technological observation"
+                    ],
+                    "severity": "CRITICAL, SEVERE, HIGH, or MODERATE",
+                    "location": "Specific location or GLOBAL",
+                    "status": "ACTIVE, MONITORING, or CONTAINED"
+                }`
             }],
             temperature: 0.9
         });
@@ -42,35 +50,42 @@ async function generateLog() {
 }
 
 export default async function handler(req, res) {
-    // Set CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    try {
+        // Get the last generated time
+        const lastGeneratedTime = await kv.get('lastGeneratedTime');
+        const now = Date.now();
 
-    if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return;
-    }
-
-    // Handle different endpoints
-    if (req.method === 'GET') {
-        if (req.query.latest) {
-            // Return latest log
-            res.json(logs[0] || null);
-        } else {
-            // Generate new log if it's been 5 minutes since last one
-            const lastLog = logs[0];
-            const now = Date.now();
-            if (!lastLog || now - new Date(lastLog.timestamp).getTime() > 5 * 60 * 1000) {
-                const newLog = await generateLog();
-                if (newLog) {
-                    logs.unshift(newLog);
-                    if (logs.length > 50) logs.pop();
-                }
+        // Check if we need to generate a new log (5 minutes passed)
+        if (!lastGeneratedTime || (now - lastGeneratedTime) >= 5 * 60 * 1000) {
+            console.log('Generating new log...');
+            const newLog = await generateLog();
+            
+            if (newLog) {
+                // Store the new log
+                await kv.set(`log:${newLog.id}`, newLog);
+                
+                // Update the list of logs
+                let logIds = await kv.get('logIds') || [];
+                logIds.unshift(newLog.id);
+                if (logIds.length > 50) logIds = logIds.slice(0, 50);
+                
+                await kv.set('logIds', logIds);
+                await kv.set('lastGeneratedTime', now);
+                
+                console.log('New log generated:', newLog.title);
             }
-            res.json(logs);
         }
-    } else {
-        res.status(405).json({ error: 'Method not allowed' });
+
+        // Fetch and return all logs
+        const logIds = await kv.get('logIds') || [];
+        const logs = await Promise.all(
+            logIds.map(id => kv.get(`log:${id}`))
+        );
+
+        res.json(logs.filter(Boolean));
+
+    } catch (error) {
+        console.error('Error in API:', error);
+        res.status(500).json({ error: 'Internal server error' });
     }
 } 
