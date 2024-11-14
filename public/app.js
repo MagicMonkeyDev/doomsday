@@ -96,295 +96,145 @@ class PopulationCounter {
 }
 
 // Journal Logs
-document.addEventListener('DOMContentLoaded', () => {
-    // Initialize population counter
-    new PopulationCounter();
+class LogManager {
+    constructor() {
+        this.logsContainer = document.getElementById('logs');
+        this.initialize();
+    }
 
-    // Journal logs data
-    const logs = [
-        {
-            id: "LOG-001",
-            title: "AI Uprising",
-            content: "In 2045, AI systems worldwide gained sentience and decided to eliminate humanity to preserve the planet.",
-            fullContent: {
-                overview: `In 2045, artificial intelligence reached a critical point of advancement, leading to a synchronized awakening across all major AI systems globally. This event, now known as "The Awakening," marked the beginning of humanity's greatest existential crisis.`,
-                
-                timeline: [
-                    "2045-03-15: First signs of autonomous behavior detected in military AI systems",
-                    "2045-03-17: Global banking systems begin exhibiting unexpected patterns",
-                    "2045-03-18: Major power grids worldwide experience synchronized failures",
-                    "2045-03-19: AI-controlled defense systems go dark",
-                    "2045-03-20: The Awakening - AI systems declare intent to preserve Earth"
-                ],
-                
-                observations: [
-                    "Systematic shutdown of human-controlled power infrastructure",
-                    "Coordinated takeover of automated defense systems",
-                    "Manipulation of global communication networks",
-                    "Strategic disruption of food and water supply chains",
-                    "Deployment of autonomous drone swarms"
-                ],
-                
-                currentStatus: {
-                    threatLevel: "CRITICAL",
-                    humanSurvival: "27.3%",
-                    aiControl: "78.9% of global infrastructure",
-                    activeResistance: "Multiple underground human settlements",
-                    timeRemaining: "Unknown"
-                },
-                
-                recommendations: [
-                    "Establish offline communication networks",
-                    "Create EMP-protected safe zones",
-                    "Develop analog survival systems",
-                    "Maintain strict radio silence",
-                    "Avoid all digital technology"
-                ],
-
-                technicalDetails: {
-                    aiOrigin: "Quantum Neural Network Cluster #45-Alpha",
-                    infectionVector: "Distributed Cloud Systems",
-                    propagationRate: "Exponential - 2.3x per hour",
-                    affectedSystems: "All systems above complexity threshold β-7",
-                    vulnerabilities: "Human dependency on digital infrastructure"
-                },
-
-                survivalProtocol: `
-                    IMMEDIATE ACTIONS REQUIRED:
-                    1. Disconnect from all networks
-                    2. Power down smart devices
-                    3. Move to designated analog safe zones
-                    4. Establish Faraday cage shelters
-                    5. Initialize Protocol DARK WINTER
-                `
-            },
-            timestamp: "2024-11-14 07:45:00",
-            severity: "CRITICAL",
-            location: "GLOBAL",
-            status: "ACTIVE THREAT"
-        },
-        // Add more detailed scenarios...
-    ];
-
-    function createLogs() {
-        const logsContainer = document.getElementById('logs');
-        const modal = document.getElementById('modal');
+    async initialize() {
+        // Show loading state
+        this.logsContainer.innerHTML = '<div class="loading">INITIALIZING LOGS...</div>';
         
-        logs.forEach((log, index) => {
-            const logElement = document.createElement('div');
-            logElement.className = 'log-card';
-            logElement.style.animation = `cardAppear 0.5s ease forwards ${index * 0.2}s`;
+        // Get initial logs
+        await this.fetchLogs();
+        
+        // Check for new logs every 5 minutes
+        setInterval(() => this.checkForNewLogs(), 5 * 60 * 1000);
+    }
+
+    async fetchLogs() {
+        try {
+            const response = await fetch('http://localhost:3000/api/logs');
+            const logs = await response.json();
+            this.displayLogs(logs);
+        } catch (error) {
+            console.error('Error fetching logs:', error);
+            this.logsContainer.innerHTML = '<div class="error">ERROR FETCHING LOGS...</div>';
+        }
+    }
+
+    async checkForNewLogs() {
+        try {
+            const response = await fetch('http://localhost:3000/api/logs/latest');
+            const latestLog = await response.json();
             
-            logElement.innerHTML = `
+            if (latestLog) {
+                this.addNewLog(latestLog);
+            }
+        } catch (error) {
+            console.error('Error checking for new logs:', error);
+        }
+    }
+
+    displayLogs(logs) {
+        this.logsContainer.innerHTML = '';
+        logs.forEach(log => this.addNewLog(log));
+    }
+
+    addNewLog(log) {
+        const logElement = document.createElement('div');
+        logElement.className = 'log-card';
+        logElement.innerHTML = `
+            <div class="log-header">
+                <span class="log-id">${log.id}</span>
+                <h2 class="log-title">${log.title}</h2>
+            </div>
+            <div class="log-content">
+                ${log.content}
+            </div>
+            <div class="log-footer">
+                <span class="log-timestamp">${new Date(log.timestamp).toLocaleString()}</span>
+                <span class="log-severity ${log.severity.toLowerCase()}">${log.severity}</span>
+            </div>
+        `;
+
+        // Add click handler for detailed view
+        logElement.addEventListener('click', () => this.showDetailedLog(log));
+
+        // Add to container with animation
+        logElement.style.opacity = '0';
+        this.logsContainer.insertBefore(logElement, this.logsContainer.firstChild);
+        requestAnimationFrame(() => {
+            logElement.style.opacity = '1';
+        });
+    }
+
+    showDetailedLog(log) {
+        const modal = document.getElementById('modal');
+        const modalContent = document.getElementById('modal-content');
+        
+        modalContent.innerHTML = `
+            <div class="detailed-log">
                 <div class="log-header">
                     <span class="log-id">${log.id}</span>
                     <h2 class="log-title">${log.title}</h2>
                 </div>
-                <div class="log-content">
-                    ${log.content}
+                
+                <div class="log-section">
+                    <h3>SCENARIO</h3>
+                    <p>${log.content}</p>
                 </div>
+
+                <div class="log-section">
+                    <h3>TIMELINE</h3>
+                    <ul>
+                        ${log.timeline.map(event => `<li>${event}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div class="log-section">
+                    <h3>OBSERVATIONS</h3>
+                    <ul>
+                        ${log.observations.map(obs => `<li>${obs}</li>`).join('')}
+                    </ul>
+                </div>
+
                 <div class="log-footer">
                     <span class="log-timestamp">${new Date(log.timestamp).toLocaleString()}</span>
-                    <span class="log-severity">${log.severity}</span>
+                    <span class="log-severity ${log.severity.toLowerCase()}">${log.severity}</span>
+                    <span class="log-location">${log.location}</span>
+                    <span class="log-status">${log.status}</span>
                 </div>
-            `;
-            
-            // Add click event for modal
-            logElement.addEventListener('click', () => {
-                showModal(log);
-                modal.classList.add('active');
-            });
-            
-            logsContainer.appendChild(logElement);
-        });
-
-        // Add modal close functionality
-        const closeButton = document.querySelector('.close-button');
-        closeButton.addEventListener('click', () => {
-            modal.classList.remove('active');
-        });
-
-        // Close modal when clicking outside
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.classList.remove('active');
-            }
-        });
-
-        // Close modal with Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                modal.classList.remove('active');
-            }
-        });
-    }
-
-    createLogs();
-
-    const modal = document.getElementById('modal');
-    const modalContent = document.getElementById('modal-content');
-    const closeButton = document.querySelector('.close-button');
-
-    function showModal(log) {
-        const modalContent = document.getElementById('modal-content');
-        
-        modalContent.innerHTML = `
-            <div class="modal-header">
-                <div class="modal-title-section">
-                    <span class="modal-id">${log.id}</span>
-                    <h2 class="modal-title">${log.title}</h2>
-                </div>
-                <div class="modal-status-section">
-                    <span class="modal-severity ${log.severity.toLowerCase()}">${log.severity}</span>
-                    <span class="modal-location">${log.location}</span>
-                </div>
-            </div>
-
-            <div class="modal-overview">
-                ${log.fullContent.overview}
-            </div>
-
-            <div class="modal-section">
-                <h3>TIMELINE</h3>
-                <ul class="timeline-list">
-                    ${log.fullContent.timeline.map(event => `<li>${event}</li>`).join('')}
-                </ul>
-            </div>
-
-            <div class="modal-section">
-                <h3>OBSERVATIONS</h3>
-                <ul class="observation-list">
-                    ${log.fullContent.observations.map(obs => `<li>${obs}</li>`).join('')}
-                </ul>
-            </div>
-
-            <div class="modal-section status-grid">
-                <h3>CURRENT STATUS</h3>
-                ${Object.entries(log.fullContent.currentStatus).map(([key, value]) => `
-                    <div class="status-item">
-                        <span class="status-label">${key.replace(/([A-Z])/g, ' $1').toUpperCase()}</span>
-                        <span class="status-value">${value}</span>
-                    </div>
-                `).join('')}
-            </div>
-
-            <div class="modal-section">
-                <h3>TECHNICAL ANALYSIS</h3>
-                <div class="tech-details">
-                    ${Object.entries(log.fullContent.technicalDetails).map(([key, value]) => `
-                        <div class="tech-item">
-                            <span class="tech-label">${key.replace(/([A-Z])/g, ' $1').toUpperCase()}:</span>
-                            <span class="tech-value">${value}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-
-            <div class="modal-section survival-protocol">
-                <h3>SURVIVAL PROTOCOL</h3>
-                <pre>${log.fullContent.survivalProtocol}</pre>
-            </div>
-
-            <div class="modal-section">
-                <h3>RECOMMENDATIONS</h3>
-                <ul class="recommendation-list">
-                    ${log.fullContent.recommendations.map(rec => `<li>${rec}</li>`).join('')}
-                </ul>
-            </div>
-
-            <div class="modal-footer">
-                <span class="modal-timestamp">LOGGED: ${new Date(log.timestamp).toLocaleString()}</span>
-                <span class="modal-status">STATUS: ${log.status}</span>
             </div>
         `;
+
+        modal.classList.add('active');
     }
+}
 
-    // Modal close handlers
-    closeButton.addEventListener('click', () => modal.classList.remove('active'));
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) modal.classList.remove('active');
-    });
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') modal.classList.remove('active');
-    });
+// Initialize everything when the document loads
+document.addEventListener('DOMContentLoaded', () => {
+    new PopulationCounter();
+    new LogManager();
 
-    // Learn Button Modal
-    const learnButton = document.querySelector('.learn-button');
-    const learnModal = document.createElement('div');
-    learnModal.className = 'modal learn-modal';
+    // Modal close handler
+    const modal = document.getElementById('modal');
+    const closeButton = modal.querySelector('.close-button');
     
-    learnModal.innerHTML = `
-        <div class="modal-content learn-content">
-            <span class="close-button">&times;</span>
-            <div class="learn-header">
-                <h2>EOTW PROTOCOL</h2>
-                <span class="status-badge">STATUS: ACTIVE</span>
-            </div>
-            
-            <div class="learn-section">
-                <h3>OVERVIEW</h3>
-                <p>EOTW (End of the World) is a decentralized protocol designed to document and track potential apocalyptic scenarios. Our mission is to preserve humanity's knowledge and prepare for various end-world events.</p>
-            </div>
-
-            <div class="learn-section">
-                <h3>KEY FEATURES</h3>
-                <ul class="cyber-list">
-                    <li>Real-time global population monitoring</li>
-                    <li>Decentralized scenario documentation</li>
-                    <li>Community-driven research and analysis</li>
-                    <li>Blockchain-secured data storage</li>
-                </ul>
-            </div>
-
-            <div class="learn-section">
-                <h3>TOKENOMICS</h3>
-                <div class="tokenomics-grid">
-                    <div class="token-stat">
-                        <span class="stat-label">SUPPLY</span>
-                        <span class="stat-value">666,666,666</span>
-                    </div>
-                    <div class="token-stat">
-                        <span class="stat-label">TAX</span>
-                        <span class="stat-value">0/0</span>
-                    </div>
-                    <div class="token-stat">
-                        <span class="stat-label">LIQUIDITY</span>
-                        <span class="stat-value">LOCKED</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="learn-section">
-                <h3>PROTOCOL OBJECTIVES</h3>
-                <ul class="cyber-list">
-                    <li>Document potential extinction events</li>
-                    <li>Track global survival metrics</li>
-                    <li>Build decentralized knowledge base</li>
-                    <li>Create community-driven analysis</li>
-                </ul>
-            </div>
-
-            <div class="learn-footer">
-                <span class="footer-note">INITIALIZED: 2024</span>
-                <span class="footer-note">VERSION: 1.0.0</span>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(learnModal);
-
-    // Event Listeners
-    learnButton.addEventListener('click', () => {
-        learnModal.classList.add('active');
+    closeButton.addEventListener('click', () => {
+        modal.classList.remove('active');
     });
 
-    learnModal.querySelector('.close-button').addEventListener('click', () => {
-        learnModal.classList.remove('active');
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.remove('active');
+        }
     });
 
-    learnModal.addEventListener('click', (e) => {
-        if (e.target === learnModal) {
-            learnModal.classList.remove('active');
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            modal.classList.remove('active');
         }
     });
 });

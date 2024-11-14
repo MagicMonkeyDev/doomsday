@@ -727,3 +727,50 @@ body {
     background: var(--neon-green);
     border-radius: 0;
 }
+
+.loading, .error {
+    text-align: center;
+    padding: 20px;
+    font-size: 1.2em;
+    color: var(--neon-green);
+}
+
+.error {
+    color: #ff4444;
+}
+
+.detailed-log .log-section {
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(128, 255, 128, 0.05);
+    border-left: 2px solid var(--neon-green);
+}
+
+.detailed-log h3 {
+    margin: 0 0 15px 0;
+    color: var(--neon-green);
+}
+
+.detailed-log ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.detailed-log li {
+    margin: 10px 0;
+    padding-left: 20px;
+    position: relative;
+}
+
+.detailed-log li::before {
+    content: '>';
+    position: absolute;
+    left: 0;
+    color: var(--neon-green);
+}
+
+.log-severity.critical { color: #ff4444; }
+.log-severity.severe { color: #ff8800; }
+.log-severity.high { color: #ffcc00; }
+.log-severity.moderate { color: #00cc00; }
