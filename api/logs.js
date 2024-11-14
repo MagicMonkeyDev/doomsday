@@ -11,43 +11,63 @@ async function generateLog() {
             model: "gpt-3.5-turbo",
             messages: [{
                 role: "system",
-                content: `You are the EOTW (End of the World) Protocol AI, a sophisticated system designed to monitor and document potential extinction-level events and apocalyptic scenarios. Generate unique, diverse scenarios - no repetition of themes or patterns.
+                content: `You are the EOTW (End of the World) Protocol AI, monitoring potential extinction-level events. Generate a single, highly detailed global catastrophic scenario.
 
-                Generate a detailed apocalyptic scenario log in this exact JSON format:
+                Rules for scenario generation:
+                1. MUST be a GLOBAL threat that affects the entire planet
+                2. MUST be scientifically plausible
+                3. MUST include realistic measurements and data
+                4. MUST be based on actual scientific phenomena
+                5. MUST have clear worldwide implications
+                6. NEVER focus on a single region or country
+                7. NEVER use generic or vague descriptions
+                8. NEVER repeat previous scenario types
+
+                Base scenarios on these categories:
+                - Astronomical Events (solar flares, asteroid impacts, gamma-ray bursts)
+                - Quantum Physics Disasters (vacuum decay, particle accelerator accidents)
+                - Global Climate Tipping Points (methane clathrate releases, thermohaline circulation collapse)
+                - Technological Singularities (AI emergence, grey goo scenarios)
+                - Cosmic Phenomena (dark matter interactions, gravitational anomalies)
+                - Biological/Evolutionary Events (rapid genetic mutations, microbial awakening)
+                - Geomagnetic/Electromagnetic Phenomena (field reversals, electromagnetic pulses)
+
+                Generate in this JSON format:
                 {
-                    "title": "Create a unique, dramatic 3-6 word title. NEVER use 'Rapid' or 'Global' or common apocalyptic phrases. Be creative and specific to the scenario.",
-                    "content": "A detailed 2-3 sentence overview using technical language and specific details. Include unique scientific phenomena, specific measurements, and realistic technological or natural systems. Every scenario should be distinctly different from others.",
+                    "title": "Unique, scientific 3-6 word title describing the global threat",
+                    "content": "2-3 detailed sentences explaining the worldwide catastrophic event, using specific scientific terminology and global impact metrics",
                     "timeline": [
-                        "T+0h: Initial detection/event with specific metrics and locations",
-                        "T+24h: First major development with unique progression details",
-                        "T+72h: Escalation with specific scientific measurements",
-                        "T+168h: Current situation with distinct characteristics"
+                        "T+0h: Initial worldwide detection details with global measurements",
+                        "T+24h: First planetary-scale developments",
+                        "T+72h: Worldwide escalation patterns",
+                        "T+168h: Global situation assessment"
                     ],
                     "observations": [
-                        "Technical scientific observation with unique measurements",
-                        "Specific geopolitical/social impact analysis",
-                        "Detailed environmental impact data",
-                        "Unique infrastructure/technological implications"
+                        "Planetary-scale scientific measurement",
+                        "Worldwide socioeconomic impact analysis",
+                        "Global environmental system changes",
+                        "Universal technological implications"
                     ],
                     "technicalData": {
-                        "originCoordinates": "Specific Lat/Long or detailed location",
-                        "spreadRate": "Unique rate of progression with precise units",
-                        "affectedRadius": "Specific area affected in km",
-                        "populationExposed": "Precise number of people at risk",
-                        "probabilityRating": "Calculated probability (0.001% to 5%)",
-                        "timeToImpact": "Specific estimated time until critical point"
+                        "originCoordinates": "Must indicate GLOBAL or multiple worldwide coordinates",
+                        "spreadRate": "Planet-wide progression rate",
+                        "affectedRadius": "Must be global scale (>1000km)",
+                        "populationExposed": "Must be >1 billion",
+                        "probabilityRating": "Realistic probability (0.001% to 1%)",
+                        "timeToImpact": "Time until global critical point"
                     },
-                    "severity": "CRITICAL, SEVERE, HIGH, or MODERATE",
-                    "location": "Specific location - be precise and varied",
-                    "status": "ACTIVE, MONITORING, or CONTAINED",
+                    "severity": "CRITICAL or SEVERE only",
+                    "location": "GLOBAL",
+                    "status": "ACTIVE or MONITORING",
                     "recommendations": [
-                        "Specific technical action item",
-                        "Unique mitigation strategy",
-                        "Detailed population protection measure"
+                        "Worldwide coordination action",
+                        "Global mitigation strategy",
+                        "Universal survival protocol"
                     ]
                 }`
             }],
-            temperature: 0.9
+            temperature: 0.8,
+            max_tokens: 1000
         });
 
         const logData = JSON.parse(completion.choices[0].message.content);
@@ -55,7 +75,7 @@ async function generateLog() {
             id: `LOG-${String(Date.now()).slice(-6)}`,
             ...logData,
             timestamp: new Date().toISOString(),
-            votes: 0  // Initialize votes
+            votes: 0
         };
     } catch (error) {
         console.error('Error generating log:', error);
@@ -100,7 +120,7 @@ export default async function handler(req, res) {
         const lastGeneratedTime = await kv.get('lastGeneratedTime');
         const now = Date.now();
 
-        // Check if we need to generate a new log (5 minutes passed)
+        // Generate only one log every 5 minutes
         if (!lastGeneratedTime || (now - lastGeneratedTime) >= 5 * 60 * 1000) {
             console.log('Generating new log...');
             const newLog = await generateLog();
@@ -109,7 +129,7 @@ export default async function handler(req, res) {
                 // Store the new log
                 await kv.set(`log:${newLog.id}`, newLog);
                 
-                // Update the list of logs
+                // Update the list of logs (keep only one new log ID)
                 let logIds = await kv.get('logIds') || [];
                 logIds.unshift(newLog.id);
                 if (logIds.length > 50) logIds = logIds.slice(0, 50);
@@ -119,29 +139,17 @@ export default async function handler(req, res) {
                 
                 console.log('New log generated:', newLog.title);
             }
+        } else {
+            console.log('Not enough time passed for new log generation');
         }
 
-        // Fetch all logs and their votes
+        // Fetch and return all logs
         const logIds = await kv.get('logIds') || [];
         const logs = await Promise.all(
-            logIds.map(async (id) => {
-                const log = await kv.get(`log:${id}`);
-                return log;
-            })
+            logIds.map(id => kv.get(`log:${id}`))
         );
 
-        // Filter out null values and sort based on query parameter
-        const validLogs = logs.filter(Boolean);
-        const sortBy = req.query.sort || 'recent';
-        
-        if (sortBy === 'votes') {
-            validLogs.sort((a, b) => (b.votes || 0) - (a.votes || 0));
-        } else {
-            // Default sort by recent
-            validLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-        }
-
-        res.json(validLogs);
+        res.json(logs.filter(Boolean));
 
     } catch (error) {
         console.error('Error in API:', error);
