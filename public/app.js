@@ -103,9 +103,20 @@ class LogManager {
         this.lastLogId = null;
         this.currentSort = 'recent';
         this.votedLogs = new Set(this.getVotedLogs());
+        
+        // Wait for DOM to be fully loaded before setting up the learn button
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.init());
+        } else {
+            this.init();
+        }
+    }
+
+    init() {
         this.initialize();
         this.setupSortControls();
         this.setupLearnButton();
+        console.log('LogManager initialized');
     }
 
     setupSortControls() {
@@ -360,163 +371,144 @@ class LogManager {
     }
 
     setupLearnButton() {
-        // First, add the modal HTML
-        if (!document.getElementById('about-overlay')) {
-            const modalHTML = `
-                <div class="modal-overlay" id="about-overlay">
-                    <div class="about-modal" id="about-modal">
-                        <div class="modal-header">
-                            <div class="header-content">
-                                <div class="protocol-id">PROTOCOL ID: EOTW-${Math.random().toString(36).substr(2, 6).toUpperCase()}</div>
-                                <div class="status-indicator">
-                                    <span class="status-dot"></span>
-                                    SYSTEM ACTIVE
-                                </div>
+        console.log('Setting up learn button...');
+        
+        // Add modal HTML to body
+        document.body.insertAdjacentHTML('beforeend', `
+            <div class="modal-overlay" id="about-overlay">
+                <div class="about-modal" id="about-modal">
+                    <div class="modal-header">
+                        <div class="header-content">
+                            <div class="protocol-id">PROTOCOL ID: EOTW-${Math.random().toString(36).substr(2, 6).toUpperCase()}</div>
+                            <div class="status-indicator">
+                                <span class="status-dot"></span>
+                                SYSTEM ACTIVE
                             </div>
-                            <button class="close-button" id="about-close">×</button>
                         </div>
-                        
-                        <div class="modal-grid">
-                            <div class="grid-item main-info">
-                                <div class="section-header">
-                                    <span class="header-line"></span>
-                                    <h2>EOTW PROTOCOL</h2>
-                                    <span class="header-line"></span>
-                                </div>
-                                <div class="info-content">
-                                    <p>The End of the World (EOTW) Protocol is an advanced monitoring system designed to track and analyze potential extinction-level events and global catastrophic scenarios.</p>
-                                    <div class="stats-grid">
-                                        <div class="stat-item">
-                                            <div class="stat-label">THREATS MONITORED</div>
-                                            <div class="stat-value">2.7M+</div>
-                                        </div>
-                                        <div class="stat-item">
-                                            <div class="stat-label">ANALYSIS ACCURACY</div>
-                                            <div class="stat-value">99.9%</div>
-                                        </div>
-                                        <div class="stat-item">
-                                            <div class="stat-label">GLOBAL COVERAGE</div>
-                                            <div class="stat-value">100%</div>
-                                        </div>
+                        <button class="close-button" id="about-close">×</button>
+                    </div>
+
+                    <div class="modal-grid">
+                        <div class="grid-item main-info">
+                            <div class="section-header">
+                                <span class="header-line"></span>
+                                <h2>EOTW PROTOCOL</h2>
+                                <span class="header-line"></span>
+                            </div>
+                            <div class="info-content">
+                                <p>The End of the World (EOTW) Protocol is an advanced monitoring system designed to track and analyze potential extinction-level events and global catastrophic scenarios.</p>
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <div class="stat-label">THREATS MONITORED</div>
+                                        <div class="stat-value">2.7M+</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-label">ANALYSIS ACCURACY</div>
+                                        <div class="stat-value">99.9%</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-label">GLOBAL COVERAGE</div>
+                                        <div class="stat-value">100%</div>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="grid-item tech-stack">
-                                <div class="section-header">
-                                    <span class="header-line"></span>
-                                    <h2>CORE SYSTEMS</h2>
-                                    <span class="header-line"></span>
+                        <div class="grid-item tech-stack">
+                            <div class="section-header">
+                                <span class="header-line"></span>
+                                <h2>CORE SYSTEMS</h2>
+                                <span class="header-line"></span>
+                            </div>
+                            <div class="tech-cards">
+                                <div class="tech-card ai">
+                                    <h3>AI NEURAL CORE</h3>
+                                    <ul>
+                                        <li>OpenAI GPT-3.5 Integration</li>
+                                        <li>Claude Advanced Analytics</li>
+                                        <li>Predictive Modeling System</li>
+                                    </ul>
                                 </div>
-                                <div class="tech-cards">
-                                    <div class="tech-card ai">
-                                        <h3>AI NEURAL CORE</h3>
-                                        <ul>
-                                            <li>OpenAI GPT-3.5 Integration</li>
-                                            <li>Claude Advanced Analytics</li>
-                                            <li>Predictive Modeling System</li>
-                                        </ul>
-                                    </div>
-                                    <div class="tech-card blockchain">
-                                        <h3>BLOCKCHAIN MATRIX</h3>
-                                        <ul>
-                                            <li>Shadowdrive Storage Protocol</li>
-                                            <li>GenesysGo Infrastructure</li>
-                                            <li>Solana Network Integration</li>
-                                        </ul>
-                                    </div>
-                                    <div class="tech-card processing">
-                                        <h3>QUANTUM PROCESSING</h3>
-                                        <ul>
-                                            <li>Real-time Data Analysis</li>
-                                            <li>Global Threat Assessment</li>
-                                            <li>Pattern Recognition Core</li>
-                                        </ul>
-                                    </div>
+                                <div class="tech-card blockchain">
+                                    <h3>BLOCKCHAIN MATRIX</h3>
+                                    <ul>
+                                        <li>Shadowdrive Storage Protocol</li>
+                                        <li>GenesysGo Infrastructure</li>
+                                        <li>Solana Network Integration</li>
+                                    </ul>
+                                </div>
+                                <div class="tech-card processing">
+                                    <h3>QUANTUM PROCESSING</h3>
+                                    <ul>
+                                        <li>Real-time Data Analysis</li>
+                                        <li>Global Threat Assessment</li>
+                                        <li>Pattern Recognition Core</li>
+                                    </ul>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="grid-item system-status">
-                                <div class="section-header">
-                                    <span class="header-line"></span>
-                                    <h2>SYSTEM STATUS</h2>
-                                    <span class="header-line"></span>
+                        <div class="grid-item system-status">
+                            <div class="section-header">
+                                <span class="header-line"></span>
+                                <h2>SYSTEM STATUS</h2>
+                                <span class="header-line"></span>
+                            </div>
+                            <div class="status-grid">
+                                <div class="status-item">
+                                    <div class="status-label">AI CORE</div>
+                                    <div class="status-bar">
+                                        <div class="status-fill" style="width: 98%"></div>
+                                    </div>
                                 </div>
-                                <div class="status-grid">
-                                    <div class="status-item">
-                                        <div class="status-label">AI CORE</div>
-                                        <div class="status-bar">
-                                            <div class="status-fill" style="width: 98%"></div>
-                                        </div>
+                                <div class="status-item">
+                                    <div class="status-label">BLOCKCHAIN</div>
+                                    <div class="status-bar">
+                                        <div class="status-fill" style="width: 100%"></div>
                                     </div>
-                                    <div class="status-item">
-                                        <div class="status-label">BLOCKCHAIN</div>
-                                        <div class="status-bar">
-                                            <div class="status-fill" style="width: 100%"></div>
-                                        </div>
-                                    </div>
-                                    <div class="status-item">
-                                        <div class="status-label">NEURAL NET</div>
-                                        <div class="status-bar">
-                                            <div class="status-fill" style="width: 95%"></div>
-                                        </div>
+                                </div>
+                                <div class="status-item">
+                                    <div class="status-label">NEURAL NET</div>
+                                    <div class="status-bar">
+                                        <div class="status-fill" style="width: 95%"></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            `;
-            document.body.insertAdjacentHTML('beforeend', modalHTML);
-        }
+            </div>
+        `);
 
-        // Find the learn button using both classes
-        const learnButton = document.querySelector('.cyber-button.learn-button');
-        console.log('Learn button found:', learnButton); // Debug log
-
-        if (learnButton) {
-            // Remove any existing click listeners
-            learnButton.replaceWith(learnButton.cloneNode(true));
-            
-            // Get the fresh reference and add the click listener
-            const freshLearnButton = document.querySelector('.cyber-button.learn-button');
-            freshLearnButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                console.log('Learn button clicked'); // Debug log
+        // Direct event listener attachment
+        document.addEventListener('click', (e) => {
+            // Check if the clicked element is the learn button
+            if (e.target.matches('.learn-button') || e.target.closest('.learn-button')) {
+                console.log('Learn button clicked');
                 const overlay = document.getElementById('about-overlay');
                 const modal = document.getElementById('about-modal');
-                if (overlay && modal) {
-                    overlay.classList.add('active');
-                    modal.classList.add('active');
-                } else {
-                    console.error('Modal elements not found');
-                }
-            });
-        } else {
-            console.error('Learn button not found');
-        }
+                overlay.classList.add('active');
+                modal.classList.add('active');
+            }
 
-        // Setup close functionality
-        const closeButton = document.getElementById('about-close');
-        const overlay = document.getElementById('about-overlay');
-
-        if (closeButton) {
-            closeButton.addEventListener('click', () => {
+            // Close button functionality
+            if (e.target.matches('#about-close')) {
+                const overlay = document.getElementById('about-overlay');
+                const modal = document.getElementById('about-modal');
                 overlay.classList.remove('active');
-                document.getElementById('about-modal').classList.remove('active');
-            });
-        }
+                modal.classList.remove('active');
+            }
 
-        if (overlay) {
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) {
-                    overlay.classList.remove('active');
-                    document.getElementById('about-modal').classList.remove('active');
-                }
-            });
-        }
+            // Click outside to close
+            if (e.target.matches('#about-overlay')) {
+                const overlay = document.getElementById('about-overlay');
+                const modal = document.getElementById('about-modal');
+                overlay.classList.remove('active');
+                modal.classList.remove('active');
+            }
+        });
 
-        // Add ESC key listener
+        // ESC key to close
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 const overlay = document.getElementById('about-overlay');
