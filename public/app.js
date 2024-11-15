@@ -103,8 +103,8 @@ class LogManager {
         this.lastLogId = null;
         this.currentSort = 'recent';
         this.votedLogs = new Set(this.getVotedLogs());
-        this.setupSortControls();
         this.initialize();
+        this.setupSortControls();
         this.setupLearnButton();
     }
 
@@ -360,6 +360,7 @@ class LogManager {
     }
 
     setupLearnButton() {
+        // First, add the modal HTML
         if (!document.getElementById('about-overlay')) {
             const modalHTML = `
                 <div class="modal-overlay" id="about-overlay">
@@ -374,7 +375,7 @@ class LogManager {
                             </div>
                             <button class="close-button" id="about-close">×</button>
                         </div>
-
+                        
                         <div class="modal-grid">
                             <div class="grid-item main-info">
                                 <div class="section-header">
@@ -469,31 +470,40 @@ class LogManager {
             document.body.insertAdjacentHTML('beforeend', modalHTML);
         }
 
-        // Update the selector to match your button class
-        const learnButton = document.querySelector('.learn-button');
+        // Find the learn button using both classes
+        const learnButton = document.querySelector('.cyber-button.learn-button');
         console.log('Learn button found:', learnButton); // Debug log
 
         if (learnButton) {
-            learnButton.addEventListener('click', () => {
+            // Remove any existing click listeners
+            learnButton.replaceWith(learnButton.cloneNode(true));
+            
+            // Get the fresh reference and add the click listener
+            const freshLearnButton = document.querySelector('.cyber-button.learn-button');
+            freshLearnButton.addEventListener('click', (e) => {
+                e.preventDefault();
                 console.log('Learn button clicked'); // Debug log
                 const overlay = document.getElementById('about-overlay');
                 const modal = document.getElementById('about-modal');
-                overlay.classList.add('active');
-                modal.classList.add('active');
+                if (overlay && modal) {
+                    overlay.classList.add('active');
+                    modal.classList.add('active');
+                } else {
+                    console.error('Modal elements not found');
+                }
             });
         } else {
-            console.error('Learn button not found!');
+            console.error('Learn button not found');
         }
 
-        // Setup close button
+        // Setup close functionality
         const closeButton = document.getElementById('about-close');
         const overlay = document.getElementById('about-overlay');
-        const modal = document.getElementById('about-modal');
 
         if (closeButton) {
             closeButton.addEventListener('click', () => {
                 overlay.classList.remove('active');
-                modal.classList.remove('active');
+                document.getElementById('about-modal').classList.remove('active');
             });
         }
 
@@ -501,7 +511,7 @@ class LogManager {
             overlay.addEventListener('click', (e) => {
                 if (e.target === overlay) {
                     overlay.classList.remove('active');
-                    modal.classList.remove('active');
+                    document.getElementById('about-modal').classList.remove('active');
                 }
             });
         }
@@ -509,8 +519,12 @@ class LogManager {
         // Add ESC key listener
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                overlay.classList.remove('active');
-                modal.classList.remove('active');
+                const overlay = document.getElementById('about-overlay');
+                const modal = document.getElementById('about-modal');
+                if (overlay && modal) {
+                    overlay.classList.remove('active');
+                    modal.classList.remove('active');
+                }
             }
         });
     }
