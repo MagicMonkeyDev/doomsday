@@ -244,25 +244,26 @@ body {
 }
 
 .close-button {
-    position: fixed;
+    position: absolute;
     top: 1rem;
     right: 1rem;
     background: transparent;
     border: 1px solid var(--neon-green);
     color: var(--neon-green);
-    width: 2rem;
-    height: 2rem;
-    font-size: 1.5rem;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 1.5rem;
     transition: all 0.3s ease;
 }
 
 .close-button:hover {
-    background: rgba(128, 255, 128, 0.1);
-    transform: scale(1.1);
+    background: var(--neon-green);
+    color: black;
 }
 
 /* Add a hover state to the cards to show they're clickable */
@@ -1101,4 +1102,9 @@ body {
 /* Scrollbar styling for the modal */
 .about-modal::-webkit-scrollbar {
     width: 8px;
+}
+
+.about-modal {
+    position: relative;
+    padding-top: 2.5rem;
 }

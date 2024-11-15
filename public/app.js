@@ -404,31 +404,44 @@ class LogManager {
             document.body.insertAdjacentHTML('beforeend', modalHTML);
         }
 
-        // Add event listeners
-        const learnButton = document.querySelector('.learn-more');
+        // Update the selector to match your button class
+        const learnButton = document.querySelector('.learn-button');
+        console.log('Learn button found:', learnButton); // Debug log
+
+        if (learnButton) {
+            learnButton.addEventListener('click', () => {
+                console.log('Learn button clicked'); // Debug log
+                const overlay = document.getElementById('about-overlay');
+                const modal = document.getElementById('about-modal');
+                overlay.classList.add('active');
+                modal.classList.add('active');
+            });
+        } else {
+            console.error('Learn button not found!');
+        }
+
+        // Setup close button
         const closeButton = document.getElementById('about-close');
         const overlay = document.getElementById('about-overlay');
         const modal = document.getElementById('about-modal');
 
-        if (learnButton) {
-            learnButton.addEventListener('click', () => {
-                overlay.classList.add('active');
-                modal.classList.add('active');
+        if (closeButton) {
+            closeButton.addEventListener('click', () => {
+                overlay.classList.remove('active');
+                modal.classList.remove('active');
             });
         }
 
-        closeButton.addEventListener('click', () => {
-            overlay.classList.remove('active');
-            modal.classList.remove('active');
-        });
+        if (overlay) {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('active');
+                    modal.classList.remove('active');
+                }
+            });
+        }
 
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) {
-                overlay.classList.remove('active');
-                modal.classList.remove('active');
-            }
-        });
-
+        // Add ESC key listener
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 overlay.classList.remove('active');
