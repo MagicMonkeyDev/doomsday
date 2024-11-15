@@ -132,15 +132,11 @@ class LogManager {
                                 <span class="header-line"></span>
                             </div>
                             <div class="info-content">
-                                <p>The End of the World (EOTW) Protocol is an advanced monitoring system designed to track and analyze potential extinction-level events and global catastrophic scenarios.</p>
+                                <p>The End of the World (EOTW) Protocol is an advanced AI monitoring database designed to track and analyze potential extinction-level events and global catastrophic scenarios.</p>
                                 <div class="stats-grid">
                                     <div class="stat-item">
                                         <div class="stat-label">POSSIBLE THREATS</div>
                                         <div class="stat-value">♾️</div>
-                                    </div>
-                                    <div class="stat-item">
-                                        <div class="stat-label">Interval Set:</div>
-                                        <div class="stat-value">300000ms</div>
                                     </div>
                                     <div class="stat-item">
                                         <div class="stat-label">GLOBAL COVERAGE</div>
@@ -160,17 +156,16 @@ class LogManager {
                                 <div class="tech-card ai">
                                     <h3>AI NEURAL CORE</h3>
                                     <ul>
-                                        <li>OpenAI GPT-3.5 Integration</li>
-                                        <li>Claude Advanced Analytics</li>
-                                        <li>Predictive Modeling System</li>
+                                        <li>OpenAI GPT-4.0 Integration</li>
+                                        <li>Claude 3.5 Advanced Analytics</li>
+                                        <li>AI Predictive Modeling System</li>
                                     </ul>
                                 </div>
                                 <div class="tech-card blockchain">
-                                    <h3>BLOCKCHAIN MATRIX</h3>
+                                    <h3>SOLANA INTEGRATION</h3>
                                     <ul>
-                                        <li>Shadowdrive Storage Protocol</li>
-                                        <li>GenesysGo Infrastructure</li>
-                                        <li>Solana Network Integration</li>
+                                        <li>Shadowdrive Blockchain Storage Protocol</li>
+                                        <li>Stores All Data On Solana.</li>
                                     </ul>
                                 </div>
                                 <div class="tech-card processing">
