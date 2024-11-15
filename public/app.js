@@ -135,12 +135,12 @@ class LogManager {
                                 <p>The End of the World (EOTW) Protocol is an advanced monitoring system designed to track and analyze potential extinction-level events and global catastrophic scenarios.</p>
                                 <div class="stats-grid">
                                     <div class="stat-item">
-                                        <div class="stat-label">THREATS MONITORED</div>
-                                        <div class="stat-value">2.7M+</div>
+                                        <div class="stat-label">POSSIBLE THREATS</div>
+                                        <div class="stat-value">♾️</div>
                                     </div>
                                     <div class="stat-item">
-                                        <div class="stat-label">ANALYSIS ACCURACY</div>
-                                        <div class="stat-value">99.9%</div>
+                                        <div class="stat-label">Interval Set:</div>
+                                        <div class="stat-value">300000ms</div>
                                     </div>
                                     <div class="stat-item">
                                         <div class="stat-label">GLOBAL COVERAGE</div>
