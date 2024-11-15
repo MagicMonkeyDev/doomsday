@@ -105,6 +105,7 @@ class LogManager {
         this.votedLogs = new Set(this.getVotedLogs());
         this.setupSortControls();
         this.initialize();
+        this.setupLearnButton();
     }
 
     setupSortControls() {
@@ -356,6 +357,84 @@ class LogManager {
         }
         
         return 'Just now';
+    }
+
+    setupLearnButton() {
+        // Create modal HTML if it doesn't exist
+        if (!document.getElementById('about-overlay')) {
+            const modalHTML = `
+                <div class="modal-overlay" id="about-overlay">
+                    <div class="about-modal" id="about-modal">
+                        <div class="about-section">
+                            <h2>EOTW PROTOCOL</h2>
+                            <p>The End of the World (EOTW) Protocol is an advanced monitoring system designed to track and analyze potential extinction-level events and global catastrophic scenarios. Using cutting-edge AI technology and blockchain infrastructure, we provide real-time assessment of worldwide threats to human civilization.</p>
+                        </div>
+
+                        <div class="about-section">
+                            <h2>TECHNOLOGY STACK</h2>
+                            <div class="tech-grid">
+                                <div class="tech-item">
+                                    <h3>AI SYSTEMS</h3>
+                                    <p>Powered by OpenAI GPT-3.5 and Anthropic's Claude, our system generates detailed analysis of potential global catastrophic scenarios with scientific accuracy.</p>
+                                </div>
+                                <div class="tech-item">
+                                    <h3>BLOCKCHAIN STORAGE</h3>
+                                    <p>Utilizing Shadowdrive and GenesysGo for decentralized, immutable storage of all scenario data and analytical results on the Solana blockchain.</p>
+                                </div>
+                                <div class="tech-item">
+                                    <h3>REAL-TIME PROCESSING</h3>
+                                    <p>Advanced algorithms process and analyze global data streams to identify and assess potential threats to human civilization.</p>
+                                </div>
+                                <div class="tech-item">
+                                    <h3>DISTRIBUTED SYSTEM</h3>
+                                    <p>Built on decentralized infrastructure to ensure continuous operation and data integrity during global catastrophic events.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="about-section">
+                            <h2>PURPOSE</h2>
+                            <p>The EOTW Protocol serves as an early warning system for civilization-ending scenarios, providing detailed analysis and recommendations for global-scale threats. Our mission is to monitor and document potential extinction-level events, enabling better preparation and response strategies for worldwide catastrophes.</p>
+                        </div>
+
+                        <button class="close-button" id="about-close">&times;</button>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        // Add event listeners
+        const learnButton = document.querySelector('.learn-more');
+        const closeButton = document.getElementById('about-close');
+        const overlay = document.getElementById('about-overlay');
+        const modal = document.getElementById('about-modal');
+
+        if (learnButton) {
+            learnButton.addEventListener('click', () => {
+                overlay.classList.add('active');
+                modal.classList.add('active');
+            });
+        }
+
+        closeButton.addEventListener('click', () => {
+            overlay.classList.remove('active');
+            modal.classList.remove('active');
+        });
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.classList.remove('active');
+                modal.classList.remove('active');
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                overlay.classList.remove('active');
+                modal.classList.remove('active');
+            }
+        });
     }
 }
 
